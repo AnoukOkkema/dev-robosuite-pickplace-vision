@@ -1,10 +1,15 @@
+from src.util.logging_configurator import LoggingConfigurator
+
+# Must run before robosuite is imported (below, transitively via
+# DatasetGenerator) -- robosuite emits its startup warnings at import time.
+LoggingConfigurator.suppress_robosuite_warnings()
+
 from dataclasses import asdict
 import wandb
 import os
 
 from src.util.system_configurator import SystemConfigurator
 from src.util.device_configurator import DeviceConfigurator
-from src.util.logging_configurator import LoggingConfigurator
 from src.util.types import CropRegion, ImageSize
 from src.data_preparation.dataset_generator import DatasetGenerator
 from src.data_preparation.data_retriever import RoboflowDownloader

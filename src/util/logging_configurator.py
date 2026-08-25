@@ -1,5 +1,7 @@
+import importlib.util
 import logging
 import logging.config
+import os
 from pathlib import Path
 
 import yaml
@@ -62,3 +64,38 @@ class LoggingConfigurator:
             cls._initialized = True
 
         return logging.getLogger(__name__)
+
+    @staticmethod
+    def suppress_robosuite_warnings() -> None:
+        """
+        Silences robosuite's own startup warnings (missing private macro
+        file, optional mink-based whole-body IK controller) by writing a
+        private macro file that raises its console logging level to
+        "ERROR" -- the same fix robosuite's own `scripts/setup_macros.py`
+        performs manually.
+
+        Must be called before robosuite is imported anywhere (directly or
+        transitively), since robosuite emits those warnings as a side
+        effect of the import itself -- so unlike `setup()`, this cannot be
+        folded into that method and has to run at the top of each
+        entrypoint, ahead of any robosuite-importing modules.
+
+        Returns:
+            None
+        """
+
+        spec = importlib.util.find_spec("robosuite")
+
+        if spec is None or not spec.submodule_search_locations:
+            return
+
+        macros_private_path = os.path.join(
+            spec.submodule_search_locations[0],
+            "macros_private.py"
+        )
+
+        if os.path.exists(macros_private_path):
+            return
+
+        with open(macros_private_path, "w") as file:
+            file.write('CONSOLE_LOGGING_LEVEL = "ERROR"\n')

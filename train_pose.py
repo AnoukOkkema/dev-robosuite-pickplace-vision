@@ -1,3 +1,10 @@
+from src.util.logging_configurator import LoggingConfigurator
+
+# Must run before robosuite is imported (below, transitively via
+# PoseDatasetGenerator/PoseVisualizer) -- robosuite emits its startup
+# warnings at import time.
+LoggingConfigurator.suppress_robosuite_warnings()
+
 import wandb
 
 from src.data_preparation.data_retriever import RoboflowDownloader
@@ -9,7 +16,6 @@ from src.evaluation.pose_visualizer import PoseVisualizer
 from src.models.pose_estimator import PoseEstimator
 from src.training.pose_trainer import PoseTrainer
 from src.util.device_configurator import DeviceConfigurator
-from src.util.logging_configurator import LoggingConfigurator
 from src.util.pose_wandb_callback import PoseWandBCallback
 from src.util.system_configurator import SystemConfigurator
 from src.util.types import CropRegion, ImageSize, PoseDatasetGeneratorConfig
