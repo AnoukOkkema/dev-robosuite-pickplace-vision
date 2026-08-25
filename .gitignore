@@ -1,0 +1,6 @@
+/data/
+/wandb/
+.env
+.ipynb_checkpoints/
+*.pyc
+yolov8n.pt

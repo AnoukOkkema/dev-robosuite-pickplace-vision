@@ -1,0 +1,55 @@
+DATA_FOLDER: "./data/"
+
+GENERATE_DATASET: true
+DOWNLOAD_DATASET: true
+TRAIN_YOLO: true
+EVAL_YOLO: true
+
+GENERATE_POSE_DATASET: true
+TRAIN_POSE_ESTIMATOR: true
+EVAL_POSE_ESTIMATOR: true
+
+ROBOFLOW:
+  WORKSPACE_NAME: "anouk-okkema"
+  PROJECT_NAME: "robosuite-pickplace-object-detection-synthetic"
+  DATASET_FOLDER_NAME: "PickPlace Vision Dataset"
+  VERSION_NUMBER: 1
+  MODEL_FORMAT: "yolov8"
+
+YOLO:
+  MODEL_NAME: "yolov8n.pt"
+  EPOCHS: 100
+  IMAGE_SIZE: 640
+  BATCH_SIZE: 16
+  PATIENCE: 30
+  PROJECT_NAME: "robosuite-pickplace-vision"
+  RUN_NAME: "yolov8n-baseline-v1"
+  EXPORT_ONNX_THRESHOLD: 0.8
+  EXPORT_ONNX_NAME: "yolo_detector.onnx"
+
+ULTRALYTICS:
+  wandb: false
+  tensorboard: false
+  mlflow: false
+  comet: false
+  clearml: false
+
+POSE:
+  PROJECT_NAME: "robosuite-pickplace-pose"
+  RUN_NAME: "pose-estimator-baseline-v1"
+  POSE_DATASET_PATH: "./data/pose_dataset.pkl"
+  CHECKPOINT_PATH: "./runs/pose_estimator/best.pt"
+  ONNX_EXPORT_PATH: "./runs/pose_estimator/pose_estimator.onnx"
+  NUM_DATASET_IMAGES: 3000
+  POS_IMAGE_SIZE: 224
+  ROTATION_IMAGE_SIZE: 128
+  DROPOUT: 0.3
+  BATCH_SIZE: 16
+  EPOCHS: 100
+  LEARNING_RATE: 0.0001
+  VAL_SPLIT: 0.15
+  TEST_SPLIT: 0.15
+  ROTATION_LOSS_WEIGHT: 1.0
+  EXPORT_ONNX_THRESHOLD: 0.8
+  EXPORT_ROTATION_THRESHOLD_DEG: 15.0
+  EARLY_STOPPING_PATIENCE: 15
