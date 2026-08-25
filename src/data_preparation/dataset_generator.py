@@ -69,14 +69,7 @@ class DatasetGenerator:
 
         self.logger = logger
 
-        os.makedirs(
-            self.save_dir,
-            exist_ok=True
-        )
-
-        self.env = self._init_env()
-
-        self._warmup()
+        self.env = None
 
     def _init_env(self) -> MujocoEnv:
         """
@@ -240,6 +233,15 @@ class DatasetGenerator:
             )
 
             return
+
+        os.makedirs(
+            self.save_dir,
+            exist_ok=True
+        )
+
+        self.env = self._init_env()
+
+        self._warmup()
 
         start_index = self._get_start_index()
 

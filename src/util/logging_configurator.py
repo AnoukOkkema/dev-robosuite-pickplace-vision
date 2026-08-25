@@ -61,40 +61,4 @@ class LoggingConfigurator:
         finally:
             cls._initialized = True
 
-        cls._route_ultralytics_logs_to_file()
-
         return logging.getLogger(__name__)
-
-    @staticmethod
-    def _route_ultralytics_logs_to_file() -> None:
-        """
-        Attaches this app's file handler(s) to Ultralytics' own logger.
-
-        Ultralytics sets `propagate = False` on its "ultralytics" logger
-        and attaches its own stdout handler (see
-        `ultralytics.utils.set_logging`), so its training/validation
-        output normally only ever prints to the console and never reaches
-        our log file. This adds our file handler directly to that logger
-        (leaving its console handler untouched) so the same output also
-        lands in logs/*.log.
-
-        Safe to call regardless of whether `ultralytics` has been imported
-        yet - `logging.getLogger("ultralytics")` just fetches/creates the
-        logger by name either way, and the handler stays attached even if
-        Ultralytics itself imports and configures that logger afterwards.
-
-        Returns:
-            None
-        """
-
-        file_handlers = [
-            handler
-            for handler in logging.getLogger().handlers
-            if isinstance(handler, logging.FileHandler)
-        ]
-
-        ultralytics_logger = logging.getLogger("ultralytics")
-
-        for handler in file_handlers:
-            if handler not in ultralytics_logger.handlers:
-                ultralytics_logger.addHandler(handler)
