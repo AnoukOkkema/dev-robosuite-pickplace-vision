@@ -312,7 +312,7 @@ class PoseEvaluator:
 
         self.logger.info(
             "Evaluation completed | xyz_mae_cm_macro=%.2f | "
-            "rot_mean_angle_error_deg_macro=%.2f | xyz_r2=%.4f (reference only)",
+            "rot_mean_angle_error_deg_macro=%.2f | xyz_r2=%.4f",
             metrics["xyz_mae_cm_macro"],
             metrics["rot_mean_angle_error_deg_macro"],
             metrics["xyz_r2"],

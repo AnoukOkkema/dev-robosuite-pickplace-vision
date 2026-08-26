@@ -1,228 +1,179 @@
-2026-08-26 11:12:38 | src.util.logging_configurator | INFO     | main:28 - Pose pipeline started | generate_pose_dataset=True | train_pose_estimator=True | eval_pose_estimator=True
-2026-08-26 11:12:38 | src.util.logging_configurator | INFO     | resolve:57 - Using torch device: cuda
-2026-08-26 11:12:38 | src.util.logging_configurator | INFO     | resolve:58 - Using ONNX providers: ['CUDAExecutionProvider', 'CPUExecutionProvider']
-2026-08-26 11:12:38 | src.util.logging_configurator | INFO     | __init__:69 - OnnxDetector initialized | model=./runs/detect/robosuite-pickplace-vision/yolov8n-baseline-v1-train/weights/yolo_detector.onnx | providers=['CUDAExecutionProvider', 'CPUExecutionProvider'] | active=['CUDAExecutionProvider', 'CPUExecutionProvider']
-2026-08-26 11:12:41 | src.util.logging_configurator | INFO     | __init__:77 - PoseDatasetGenerator initialized | classes=['Bread', 'Can', 'Cereal', 'Milk'] | save_path=./data/pose_dataset.pkl
-2026-08-26 11:12:41 | src.util.logging_configurator | INFO     | generate:328 - Starting pose dataset generation | num_images=4000 | batch_size=16
-2026-08-26 12:36:05 | src.util.logging_configurator | INFO     | generate:406 - Pose dataset generation completed | saved=4000 | path=./data/pose_dataset.pkl
-2026-08-26 12:36:07 | src.util.logging_configurator | INFO     | __init__:60 - PoseDataLoader initialized | total=16000 | train=11200 | val=2400 | test=2400
-2026-08-26 12:36:14 | src.util.logging_configurator | INFO     | __init__:74 - PoseVisualizer initialized.
-2026-08-26 12:36:14 | src.util.logging_configurator | INFO     | __init__:97 - PoseTrainer initialized | epochs=200 | device=cuda
-2026-08-26 12:36:14 | src.util.logging_configurator | INFO     | train:232 - Starting PoseEstimator training...
-2026-08-26 12:36:14 | src.util.logging_configurator | INFO     | log_model_info:98 - Logged model info to W&B.
-2026-08-26 12:37:08 | src.util.logging_configurator | INFO     | train:250 - epoch=1/200 | train_xyz_r2=0.9821 train_rot_err_deg=17.84 | val_xyz_r2=0.9947 val_rot_err_deg=8.13 | lr=1.00e-04
-2026-08-26 12:37:20 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=0.9947 val_rot_err_deg=8.13 -> runs\pose_estimator\best.pt
-2026-08-26 12:38:15 | src.util.logging_configurator | INFO     | train:250 - epoch=2/200 | train_xyz_r2=0.9967 train_rot_err_deg=10.26 | val_xyz_r2=0.9988 val_rot_err_deg=5.43 | lr=1.00e-04
-2026-08-26 12:38:26 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=0.9988 val_rot_err_deg=5.43 -> runs\pose_estimator\best.pt
-2026-08-26 12:39:22 | src.util.logging_configurator | INFO     | train:250 - epoch=3/200 | train_xyz_r2=0.9992 train_rot_err_deg=10.25 | val_xyz_r2=0.9997 val_rot_err_deg=8.05 | lr=1.00e-04
-2026-08-26 12:40:29 | src.util.logging_configurator | INFO     | train:250 - epoch=4/200 | train_xyz_r2=0.9998 train_rot_err_deg=9.68 | val_xyz_r2=0.9999 val_rot_err_deg=6.50 | lr=1.00e-04
-2026-08-26 12:41:38 | src.util.logging_configurator | INFO     | train:250 - epoch=5/200 | train_xyz_r2=0.9999 train_rot_err_deg=10.74 | val_xyz_r2=0.9997 val_rot_err_deg=8.55 | lr=1.00e-04
-2026-08-26 12:42:46 | src.util.logging_configurator | INFO     | train:250 - epoch=6/200 | train_xyz_r2=0.9999 train_rot_err_deg=9.73 | val_xyz_r2=0.9999 val_rot_err_deg=5.47 | lr=1.00e-04
-2026-08-26 12:43:55 | src.util.logging_configurator | INFO     | train:250 - epoch=7/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.58 | val_xyz_r2=0.9997 val_rot_err_deg=5.60 | lr=1.00e-04
-2026-08-26 12:45:03 | src.util.logging_configurator | INFO     | train:250 - epoch=8/200 | train_xyz_r2=0.9999 train_rot_err_deg=11.86 | val_xyz_r2=0.9999 val_rot_err_deg=7.55 | lr=5.00e-05
-2026-08-26 12:46:12 | src.util.logging_configurator | INFO     | train:250 - epoch=9/200 | train_xyz_r2=0.9999 train_rot_err_deg=10.36 | val_xyz_r2=1.0000 val_rot_err_deg=6.92 | lr=5.00e-05
-2026-08-26 12:47:20 | src.util.logging_configurator | INFO     | train:250 - epoch=10/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.25 | val_xyz_r2=0.9999 val_rot_err_deg=5.20 | lr=5.00e-05
-2026-08-26 12:47:32 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=0.9999 val_rot_err_deg=5.20 -> runs\pose_estimator\best.pt
-2026-08-26 12:48:29 | src.util.logging_configurator | INFO     | train:250 - epoch=11/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.72 | val_xyz_r2=0.9999 val_rot_err_deg=5.63 | lr=5.00e-05
-2026-08-26 12:49:38 | src.util.logging_configurator | INFO     | train:250 - epoch=12/200 | train_xyz_r2=0.9999 train_rot_err_deg=9.87 | val_xyz_r2=0.9999 val_rot_err_deg=7.11 | lr=5.00e-05
-2026-08-26 12:50:48 | src.util.logging_configurator | INFO     | train:250 - epoch=13/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.58 | val_xyz_r2=0.9999 val_rot_err_deg=6.55 | lr=5.00e-05
-2026-08-26 12:51:57 | src.util.logging_configurator | INFO     | train:250 - epoch=14/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.05 | val_xyz_r2=1.0000 val_rot_err_deg=4.23 | lr=5.00e-05
-2026-08-26 12:52:09 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=4.23 -> runs\pose_estimator\best.pt
-2026-08-26 12:53:07 | src.util.logging_configurator | INFO     | train:250 - epoch=15/200 | train_xyz_r2=0.9999 train_rot_err_deg=7.54 | val_xyz_r2=0.9998 val_rot_err_deg=4.34 | lr=5.00e-05
-2026-08-26 12:54:16 | src.util.logging_configurator | INFO     | train:250 - epoch=16/200 | train_xyz_r2=0.9999 train_rot_err_deg=7.17 | val_xyz_r2=0.9999 val_rot_err_deg=5.53 | lr=5.00e-05
-2026-08-26 12:55:26 | src.util.logging_configurator | INFO     | train:250 - epoch=17/200 | train_xyz_r2=0.9999 train_rot_err_deg=7.38 | val_xyz_r2=0.9999 val_rot_err_deg=4.00 | lr=5.00e-05
-2026-08-26 12:55:37 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=0.9999 val_rot_err_deg=4.00 -> runs\pose_estimator\best.pt
-2026-08-26 12:56:35 | src.util.logging_configurator | INFO     | train:250 - epoch=18/200 | train_xyz_r2=0.9999 train_rot_err_deg=6.58 | val_xyz_r2=0.9999 val_rot_err_deg=3.79 | lr=5.00e-05
-2026-08-26 12:56:46 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=0.9999 val_rot_err_deg=3.79 -> runs\pose_estimator\best.pt
-2026-08-26 12:57:44 | src.util.logging_configurator | INFO     | train:250 - epoch=19/200 | train_xyz_r2=0.9999 train_rot_err_deg=6.60 | val_xyz_r2=0.9999 val_rot_err_deg=5.06 | lr=5.00e-05
-2026-08-26 12:58:52 | src.util.logging_configurator | INFO     | train:250 - epoch=20/200 | train_xyz_r2=0.9999 train_rot_err_deg=6.59 | val_xyz_r2=0.9999 val_rot_err_deg=6.42 | lr=5.00e-05
-2026-08-26 13:00:01 | src.util.logging_configurator | INFO     | train:250 - epoch=21/200 | train_xyz_r2=0.9999 train_rot_err_deg=6.59 | val_xyz_r2=1.0000 val_rot_err_deg=4.11 | lr=5.00e-05
-2026-08-26 13:01:09 | src.util.logging_configurator | INFO     | train:250 - epoch=22/200 | train_xyz_r2=0.9999 train_rot_err_deg=7.17 | val_xyz_r2=0.9999 val_rot_err_deg=4.75 | lr=5.00e-05
-2026-08-26 13:02:18 | src.util.logging_configurator | INFO     | train:250 - epoch=23/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.79 | val_xyz_r2=0.9999 val_rot_err_deg=5.35 | lr=5.00e-05
-2026-08-26 13:03:26 | src.util.logging_configurator | INFO     | train:250 - epoch=24/200 | train_xyz_r2=0.9999 train_rot_err_deg=8.23 | val_xyz_r2=0.9999 val_rot_err_deg=4.73 | lr=2.50e-05
-2026-08-26 13:04:35 | src.util.logging_configurator | INFO     | train:250 - epoch=25/200 | train_xyz_r2=1.0000 train_rot_err_deg=6.80 | val_xyz_r2=1.0000 val_rot_err_deg=4.17 | lr=2.50e-05
-2026-08-26 13:05:43 | src.util.logging_configurator | INFO     | train:250 - epoch=26/200 | train_xyz_r2=1.0000 train_rot_err_deg=6.56 | val_xyz_r2=1.0000 val_rot_err_deg=4.67 | lr=2.50e-05
-2026-08-26 13:06:51 | src.util.logging_configurator | INFO     | train:250 - epoch=27/200 | train_xyz_r2=1.0000 train_rot_err_deg=6.14 | val_xyz_r2=1.0000 val_rot_err_deg=3.72 | lr=2.50e-05
-2026-08-26 13:07:02 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=3.72 -> runs\pose_estimator\best.pt
-2026-08-26 13:07:59 | src.util.logging_configurator | INFO     | train:250 - epoch=28/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.94 | val_xyz_r2=1.0000 val_rot_err_deg=3.19 | lr=2.50e-05
-2026-08-26 13:08:11 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=3.19 -> runs\pose_estimator\best.pt
-2026-08-26 13:09:08 | src.util.logging_configurator | INFO     | train:250 - epoch=29/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.57 | val_xyz_r2=1.0000 val_rot_err_deg=3.46 | lr=2.50e-05
-2026-08-26 13:10:17 | src.util.logging_configurator | INFO     | train:250 - epoch=30/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.54 | val_xyz_r2=1.0000 val_rot_err_deg=3.40 | lr=2.50e-05
-2026-08-26 13:11:26 | src.util.logging_configurator | INFO     | train:250 - epoch=31/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.10 | val_xyz_r2=1.0000 val_rot_err_deg=3.62 | lr=2.50e-05
-2026-08-26 13:12:35 | src.util.logging_configurator | INFO     | train:250 - epoch=32/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.94 | val_xyz_r2=1.0000 val_rot_err_deg=3.37 | lr=2.50e-05
-2026-08-26 13:13:44 | src.util.logging_configurator | INFO     | train:250 - epoch=33/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.77 | val_xyz_r2=1.0000 val_rot_err_deg=3.82 | lr=2.50e-05
-2026-08-26 13:14:53 | src.util.logging_configurator | INFO     | train:250 - epoch=34/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.46 | val_xyz_r2=1.0000 val_rot_err_deg=3.39 | lr=1.25e-05
-2026-08-26 13:16:01 | src.util.logging_configurator | INFO     | train:250 - epoch=35/200 | train_xyz_r2=1.0000 train_rot_err_deg=5.20 | val_xyz_r2=1.0000 val_rot_err_deg=3.11 | lr=1.25e-05
-2026-08-26 13:16:12 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=3.11 -> runs\pose_estimator\best.pt
-2026-08-26 13:17:10 | src.util.logging_configurator | INFO     | train:250 - epoch=36/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.90 | val_xyz_r2=1.0000 val_rot_err_deg=3.26 | lr=1.25e-05
-2026-08-26 13:18:20 | src.util.logging_configurator | INFO     | train:250 - epoch=37/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.67 | val_xyz_r2=1.0000 val_rot_err_deg=2.93 | lr=1.25e-05
-2026-08-26 13:18:31 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.93 -> runs\pose_estimator\best.pt
-2026-08-26 13:19:29 | src.util.logging_configurator | INFO     | train:250 - epoch=38/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.60 | val_xyz_r2=1.0000 val_rot_err_deg=3.04 | lr=1.25e-05
-2026-08-26 13:20:37 | src.util.logging_configurator | INFO     | train:250 - epoch=39/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.28 | val_xyz_r2=1.0000 val_rot_err_deg=2.93 | lr=1.25e-05
-2026-08-26 13:21:47 | src.util.logging_configurator | INFO     | train:250 - epoch=40/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.31 | val_xyz_r2=1.0000 val_rot_err_deg=2.96 | lr=1.25e-05
-2026-08-26 13:22:56 | src.util.logging_configurator | INFO     | train:250 - epoch=41/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.23 | val_xyz_r2=1.0000 val_rot_err_deg=2.80 | lr=1.25e-05
-2026-08-26 13:23:07 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.80 -> runs\pose_estimator\best.pt
-2026-08-26 13:24:06 | src.util.logging_configurator | INFO     | train:250 - epoch=42/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.36 | val_xyz_r2=1.0000 val_rot_err_deg=3.02 | lr=1.25e-05
-2026-08-26 13:25:15 | src.util.logging_configurator | INFO     | train:250 - epoch=43/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.43 | val_xyz_r2=1.0000 val_rot_err_deg=2.92 | lr=1.25e-05
-2026-08-26 13:26:24 | src.util.logging_configurator | INFO     | train:250 - epoch=44/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.23 | val_xyz_r2=1.0000 val_rot_err_deg=2.81 | lr=1.25e-05
-2026-08-26 13:27:33 | src.util.logging_configurator | INFO     | train:250 - epoch=45/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.23 | val_xyz_r2=1.0000 val_rot_err_deg=2.78 | lr=1.25e-05
-2026-08-26 13:27:44 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.78 -> runs\pose_estimator\best.pt
-2026-08-26 13:28:42 | src.util.logging_configurator | INFO     | train:250 - epoch=46/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.39 | val_xyz_r2=1.0000 val_rot_err_deg=3.05 | lr=1.25e-05
-2026-08-26 13:29:50 | src.util.logging_configurator | INFO     | train:250 - epoch=47/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.46 | val_xyz_r2=1.0000 val_rot_err_deg=3.31 | lr=1.25e-05
-2026-08-26 13:30:59 | src.util.logging_configurator | INFO     | train:250 - epoch=48/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.27 | val_xyz_r2=1.0000 val_rot_err_deg=2.81 | lr=1.25e-05
-2026-08-26 13:32:07 | src.util.logging_configurator | INFO     | train:250 - epoch=49/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.17 | val_xyz_r2=1.0000 val_rot_err_deg=2.65 | lr=1.25e-05
-2026-08-26 13:32:18 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.65 -> runs\pose_estimator\best.pt
-2026-08-26 13:33:16 | src.util.logging_configurator | INFO     | train:250 - epoch=50/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.15 | val_xyz_r2=1.0000 val_rot_err_deg=2.55 | lr=1.25e-05
-2026-08-26 13:33:28 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.55 -> runs\pose_estimator\best.pt
-2026-08-26 13:34:26 | src.util.logging_configurator | INFO     | train:250 - epoch=51/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.10 | val_xyz_r2=1.0000 val_rot_err_deg=3.18 | lr=1.25e-05
-2026-08-26 13:35:35 | src.util.logging_configurator | INFO     | train:250 - epoch=52/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.91 | val_xyz_r2=1.0000 val_rot_err_deg=2.87 | lr=1.25e-05
-2026-08-26 13:36:44 | src.util.logging_configurator | INFO     | train:250 - epoch=53/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.07 | val_xyz_r2=1.0000 val_rot_err_deg=2.79 | lr=1.25e-05
-2026-08-26 13:37:52 | src.util.logging_configurator | INFO     | train:250 - epoch=54/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.97 | val_xyz_r2=1.0000 val_rot_err_deg=2.61 | lr=1.25e-05
-2026-08-26 13:39:01 | src.util.logging_configurator | INFO     | train:250 - epoch=55/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.86 | val_xyz_r2=1.0000 val_rot_err_deg=2.48 | lr=1.25e-05
-2026-08-26 13:39:12 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.48 -> runs\pose_estimator\best.pt
-2026-08-26 13:40:10 | src.util.logging_configurator | INFO     | train:250 - epoch=56/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.86 | val_xyz_r2=1.0000 val_rot_err_deg=2.52 | lr=1.25e-05
-2026-08-26 13:41:19 | src.util.logging_configurator | INFO     | train:250 - epoch=57/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.85 | val_xyz_r2=1.0000 val_rot_err_deg=2.49 | lr=1.25e-05
-2026-08-26 13:42:27 | src.util.logging_configurator | INFO     | train:250 - epoch=58/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.96 | val_xyz_r2=1.0000 val_rot_err_deg=2.61 | lr=1.25e-05
-2026-08-26 13:43:35 | src.util.logging_configurator | INFO     | train:250 - epoch=59/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.10 | val_xyz_r2=1.0000 val_rot_err_deg=2.48 | lr=1.25e-05
-2026-08-26 13:44:44 | src.util.logging_configurator | INFO     | train:250 - epoch=60/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.12 | val_xyz_r2=1.0000 val_rot_err_deg=2.81 | lr=1.25e-05
-2026-08-26 13:45:52 | src.util.logging_configurator | INFO     | train:250 - epoch=61/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.97 | val_xyz_r2=1.0000 val_rot_err_deg=2.73 | lr=6.25e-06
-2026-08-26 13:47:01 | src.util.logging_configurator | INFO     | train:250 - epoch=62/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.91 | val_xyz_r2=1.0000 val_rot_err_deg=2.64 | lr=6.25e-06
-2026-08-26 13:48:10 | src.util.logging_configurator | INFO     | train:250 - epoch=63/200 | train_xyz_r2=1.0000 train_rot_err_deg=4.03 | val_xyz_r2=1.0000 val_rot_err_deg=2.86 | lr=6.25e-06
-2026-08-26 13:49:18 | src.util.logging_configurator | INFO     | train:250 - epoch=64/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.93 | val_xyz_r2=1.0000 val_rot_err_deg=2.44 | lr=6.25e-06
-2026-08-26 13:49:30 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.44 -> runs\pose_estimator\best.pt
-2026-08-26 13:50:27 | src.util.logging_configurator | INFO     | train:250 - epoch=65/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.83 | val_xyz_r2=1.0000 val_rot_err_deg=2.48 | lr=6.25e-06
-2026-08-26 13:51:36 | src.util.logging_configurator | INFO     | train:250 - epoch=66/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.89 | val_xyz_r2=1.0000 val_rot_err_deg=2.48 | lr=6.25e-06
-2026-08-26 13:52:46 | src.util.logging_configurator | INFO     | train:250 - epoch=67/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.81 | val_xyz_r2=1.0000 val_rot_err_deg=2.87 | lr=6.25e-06
-2026-08-26 13:53:55 | src.util.logging_configurator | INFO     | train:250 - epoch=68/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.75 | val_xyz_r2=1.0000 val_rot_err_deg=2.31 | lr=6.25e-06
-2026-08-26 13:54:06 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.31 -> runs\pose_estimator\best.pt
-2026-08-26 13:55:03 | src.util.logging_configurator | INFO     | train:250 - epoch=69/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.73 | val_xyz_r2=1.0000 val_rot_err_deg=2.31 | lr=6.25e-06
-2026-08-26 13:55:14 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.31 -> runs\pose_estimator\best.pt
-2026-08-26 13:56:13 | src.util.logging_configurator | INFO     | train:250 - epoch=70/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.60 | val_xyz_r2=1.0000 val_rot_err_deg=2.23 | lr=6.25e-06
-2026-08-26 13:56:24 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.23 -> runs\pose_estimator\best.pt
-2026-08-26 13:57:22 | src.util.logging_configurator | INFO     | train:250 - epoch=71/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.44 | val_xyz_r2=1.0000 val_rot_err_deg=2.47 | lr=6.25e-06
-2026-08-26 13:58:31 | src.util.logging_configurator | INFO     | train:250 - epoch=72/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.38 | val_xyz_r2=1.0000 val_rot_err_deg=2.46 | lr=6.25e-06
-2026-08-26 13:59:40 | src.util.logging_configurator | INFO     | train:250 - epoch=73/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.47 | val_xyz_r2=1.0000 val_rot_err_deg=2.23 | lr=6.25e-06
-2026-08-26 14:00:50 | src.util.logging_configurator | INFO     | train:250 - epoch=74/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.35 | val_xyz_r2=1.0000 val_rot_err_deg=2.21 | lr=6.25e-06
-2026-08-26 14:01:01 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.21 -> runs\pose_estimator\best.pt
-2026-08-26 14:02:00 | src.util.logging_configurator | INFO     | train:250 - epoch=75/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.30 | val_xyz_r2=1.0000 val_rot_err_deg=2.39 | lr=6.25e-06
-2026-08-26 14:03:09 | src.util.logging_configurator | INFO     | train:250 - epoch=76/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.35 | val_xyz_r2=1.0000 val_rot_err_deg=2.14 | lr=6.25e-06
-2026-08-26 14:03:20 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.14 -> runs\pose_estimator\best.pt
-2026-08-26 14:04:18 | src.util.logging_configurator | INFO     | train:250 - epoch=77/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.40 | val_xyz_r2=1.0000 val_rot_err_deg=2.16 | lr=6.25e-06
-2026-08-26 14:05:27 | src.util.logging_configurator | INFO     | train:250 - epoch=78/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.32 | val_xyz_r2=1.0000 val_rot_err_deg=2.33 | lr=6.25e-06
-2026-08-26 14:06:36 | src.util.logging_configurator | INFO     | train:250 - epoch=79/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.32 | val_xyz_r2=1.0000 val_rot_err_deg=2.26 | lr=6.25e-06
-2026-08-26 14:07:45 | src.util.logging_configurator | INFO     | train:250 - epoch=80/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.28 | val_xyz_r2=1.0000 val_rot_err_deg=2.20 | lr=6.25e-06
-2026-08-26 14:08:55 | src.util.logging_configurator | INFO     | train:250 - epoch=81/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.30 | val_xyz_r2=1.0000 val_rot_err_deg=2.10 | lr=6.25e-06
-2026-08-26 14:09:06 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.10 -> runs\pose_estimator\best.pt
-2026-08-26 14:10:05 | src.util.logging_configurator | INFO     | train:250 - epoch=82/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.32 | val_xyz_r2=1.0000 val_rot_err_deg=2.34 | lr=6.25e-06
-2026-08-26 14:11:14 | src.util.logging_configurator | INFO     | train:250 - epoch=83/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.29 | val_xyz_r2=1.0000 val_rot_err_deg=2.31 | lr=6.25e-06
-2026-08-26 14:12:23 | src.util.logging_configurator | INFO     | train:250 - epoch=84/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.23 | val_xyz_r2=1.0000 val_rot_err_deg=2.11 | lr=6.25e-06
-2026-08-26 14:13:31 | src.util.logging_configurator | INFO     | train:250 - epoch=85/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.08 | val_xyz_r2=1.0000 val_rot_err_deg=2.12 | lr=6.25e-06
-2026-08-26 14:14:41 | src.util.logging_configurator | INFO     | train:250 - epoch=86/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.16 | val_xyz_r2=1.0000 val_rot_err_deg=2.15 | lr=6.25e-06
-2026-08-26 14:15:49 | src.util.logging_configurator | INFO     | train:250 - epoch=87/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.18 | val_xyz_r2=1.0000 val_rot_err_deg=2.17 | lr=3.13e-06
-2026-08-26 14:16:58 | src.util.logging_configurator | INFO     | train:250 - epoch=88/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.16 | val_xyz_r2=1.0000 val_rot_err_deg=2.19 | lr=3.13e-06
-2026-08-26 14:18:06 | src.util.logging_configurator | INFO     | train:250 - epoch=89/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.14 | val_xyz_r2=1.0000 val_rot_err_deg=2.12 | lr=3.13e-06
-2026-08-26 14:19:15 | src.util.logging_configurator | INFO     | train:250 - epoch=90/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.08 | val_xyz_r2=1.0000 val_rot_err_deg=2.27 | lr=3.13e-06
-2026-08-26 14:20:24 | src.util.logging_configurator | INFO     | train:250 - epoch=91/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.01 | val_xyz_r2=1.0000 val_rot_err_deg=2.10 | lr=3.13e-06
-2026-08-26 14:20:35 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.10 -> runs\pose_estimator\best.pt
-2026-08-26 14:21:33 | src.util.logging_configurator | INFO     | train:250 - epoch=92/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.07 | val_xyz_r2=1.0000 val_rot_err_deg=2.18 | lr=3.13e-06
-2026-08-26 14:22:42 | src.util.logging_configurator | INFO     | train:250 - epoch=93/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.06 | val_xyz_r2=1.0000 val_rot_err_deg=2.19 | lr=3.13e-06
-2026-08-26 14:23:50 | src.util.logging_configurator | INFO     | train:250 - epoch=94/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.97 | val_xyz_r2=1.0000 val_rot_err_deg=2.02 | lr=3.13e-06
-2026-08-26 14:24:02 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.02 -> runs\pose_estimator\best.pt
-2026-08-26 14:25:00 | src.util.logging_configurator | INFO     | train:250 - epoch=95/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.01 | val_xyz_r2=1.0000 val_rot_err_deg=2.18 | lr=3.13e-06
-2026-08-26 14:26:08 | src.util.logging_configurator | INFO     | train:250 - epoch=96/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.06 | val_xyz_r2=1.0000 val_rot_err_deg=2.06 | lr=3.13e-06
-2026-08-26 14:27:17 | src.util.logging_configurator | INFO     | train:250 - epoch=97/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.00 | val_xyz_r2=1.0000 val_rot_err_deg=2.05 | lr=3.13e-06
-2026-08-26 14:28:26 | src.util.logging_configurator | INFO     | train:250 - epoch=98/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.11 | val_xyz_r2=1.0000 val_rot_err_deg=2.02 | lr=3.13e-06
-2026-08-26 14:28:37 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=2.02 -> runs\pose_estimator\best.pt
-2026-08-26 14:29:35 | src.util.logging_configurator | INFO     | train:250 - epoch=99/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.01 | val_xyz_r2=1.0000 val_rot_err_deg=2.07 | lr=3.13e-06
-2026-08-26 14:30:44 | src.util.logging_configurator | INFO     | train:250 - epoch=100/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.93 | val_xyz_r2=1.0000 val_rot_err_deg=1.97 | lr=3.13e-06
-2026-08-26 14:30:56 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.97 -> runs\pose_estimator\best.pt
-2026-08-26 14:31:54 | src.util.logging_configurator | INFO     | train:250 - epoch=101/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.99 | val_xyz_r2=1.0000 val_rot_err_deg=2.08 | lr=3.13e-06
-2026-08-26 14:33:04 | src.util.logging_configurator | INFO     | train:250 - epoch=102/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.92 | val_xyz_r2=1.0000 val_rot_err_deg=2.03 | lr=3.13e-06
-2026-08-26 14:34:14 | src.util.logging_configurator | INFO     | train:250 - epoch=103/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.95 | val_xyz_r2=1.0000 val_rot_err_deg=2.09 | lr=3.13e-06
-2026-08-26 14:35:22 | src.util.logging_configurator | INFO     | train:250 - epoch=104/200 | train_xyz_r2=1.0000 train_rot_err_deg=3.05 | val_xyz_r2=1.0000 val_rot_err_deg=2.03 | lr=3.13e-06
-2026-08-26 14:36:32 | src.util.logging_configurator | INFO     | train:250 - epoch=105/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.96 | val_xyz_r2=1.0000 val_rot_err_deg=2.13 | lr=3.13e-06
-2026-08-26 14:37:41 | src.util.logging_configurator | INFO     | train:250 - epoch=106/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=2.18 | lr=1.56e-06
-2026-08-26 14:38:50 | src.util.logging_configurator | INFO     | train:250 - epoch=107/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.91 | val_xyz_r2=1.0000 val_rot_err_deg=1.97 | lr=1.56e-06
-2026-08-26 14:39:01 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.97 -> runs\pose_estimator\best.pt
-2026-08-26 14:39:59 | src.util.logging_configurator | INFO     | train:250 - epoch=108/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.92 | val_xyz_r2=1.0000 val_rot_err_deg=2.02 | lr=1.56e-06
-2026-08-26 14:41:08 | src.util.logging_configurator | INFO     | train:250 - epoch=109/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.96 | val_xyz_r2=1.0000 val_rot_err_deg=2.01 | lr=1.56e-06
-2026-08-26 14:42:18 | src.util.logging_configurator | INFO     | train:250 - epoch=110/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.89 | val_xyz_r2=1.0000 val_rot_err_deg=2.05 | lr=1.56e-06
-2026-08-26 14:43:27 | src.util.logging_configurator | INFO     | train:250 - epoch=111/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.92 | val_xyz_r2=1.0000 val_rot_err_deg=2.07 | lr=1.56e-06
-2026-08-26 14:44:35 | src.util.logging_configurator | INFO     | train:250 - epoch=112/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.88 | val_xyz_r2=1.0000 val_rot_err_deg=1.97 | lr=1.56e-06
-2026-08-26 14:45:45 | src.util.logging_configurator | INFO     | train:250 - epoch=113/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.88 | val_xyz_r2=1.0000 val_rot_err_deg=1.99 | lr=7.81e-07
-2026-08-26 14:46:54 | src.util.logging_configurator | INFO     | train:250 - epoch=114/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=2.07 | lr=7.81e-07
-2026-08-26 14:48:04 | src.util.logging_configurator | INFO     | train:250 - epoch=115/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=1.96 | lr=7.81e-07
-2026-08-26 14:48:15 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.96 -> runs\pose_estimator\best.pt
-2026-08-26 14:49:14 | src.util.logging_configurator | INFO     | train:250 - epoch=116/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.79 | val_xyz_r2=1.0000 val_rot_err_deg=1.99 | lr=7.81e-07
-2026-08-26 14:50:23 | src.util.logging_configurator | INFO     | train:250 - epoch=117/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.90 | val_xyz_r2=1.0000 val_rot_err_deg=1.99 | lr=7.81e-07
-2026-08-26 14:51:32 | src.util.logging_configurator | INFO     | train:250 - epoch=118/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.86 | val_xyz_r2=1.0000 val_rot_err_deg=2.06 | lr=7.81e-07
-2026-08-26 14:52:42 | src.util.logging_configurator | INFO     | train:250 - epoch=119/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=2.01 | lr=7.81e-07
-2026-08-26 14:53:51 | src.util.logging_configurator | INFO     | train:250 - epoch=120/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.82 | val_xyz_r2=1.0000 val_rot_err_deg=2.02 | lr=7.81e-07
-2026-08-26 14:54:59 | src.util.logging_configurator | INFO     | train:250 - epoch=121/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.79 | val_xyz_r2=1.0000 val_rot_err_deg=2.01 | lr=3.91e-07
-2026-08-26 14:56:09 | src.util.logging_configurator | INFO     | train:250 - epoch=122/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=2.11 | lr=3.91e-07
-2026-08-26 14:57:17 | src.util.logging_configurator | INFO     | train:250 - epoch=123/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.89 | val_xyz_r2=1.0000 val_rot_err_deg=2.03 | lr=3.91e-07
-2026-08-26 14:58:26 | src.util.logging_configurator | INFO     | train:250 - epoch=124/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.81 | val_xyz_r2=1.0000 val_rot_err_deg=2.05 | lr=3.91e-07
-2026-08-26 14:59:36 | src.util.logging_configurator | INFO     | train:250 - epoch=125/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=2.02 | lr=3.91e-07
-2026-08-26 15:00:45 | src.util.logging_configurator | INFO     | train:250 - epoch=126/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.93 | val_xyz_r2=1.0000 val_rot_err_deg=1.93 | lr=3.91e-07
-2026-08-26 15:00:57 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.93 -> runs\pose_estimator\best.pt
-2026-08-26 15:01:55 | src.util.logging_configurator | INFO     | train:250 - epoch=127/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.77 | val_xyz_r2=1.0000 val_rot_err_deg=1.92 | lr=3.91e-07
-2026-08-26 15:02:06 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.92 -> runs\pose_estimator\best.pt
-2026-08-26 15:03:04 | src.util.logging_configurator | INFO     | train:250 - epoch=128/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.86 | val_xyz_r2=1.0000 val_rot_err_deg=1.94 | lr=3.91e-07
-2026-08-26 15:04:15 | src.util.logging_configurator | INFO     | train:250 - epoch=129/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.86 | val_xyz_r2=1.0000 val_rot_err_deg=1.95 | lr=3.91e-07
-2026-08-26 15:05:24 | src.util.logging_configurator | INFO     | train:250 - epoch=130/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.86 | val_xyz_r2=1.0000 val_rot_err_deg=1.95 | lr=3.91e-07
-2026-08-26 15:06:34 | src.util.logging_configurator | INFO     | train:250 - epoch=131/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.81 | val_xyz_r2=1.0000 val_rot_err_deg=1.96 | lr=3.91e-07
-2026-08-26 15:07:43 | src.util.logging_configurator | INFO     | train:250 - epoch=132/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.80 | val_xyz_r2=1.0000 val_rot_err_deg=1.90 | lr=3.91e-07
-2026-08-26 15:07:54 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.90 -> runs\pose_estimator\best.pt
-2026-08-26 15:08:53 | src.util.logging_configurator | INFO     | train:250 - epoch=133/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.78 | val_xyz_r2=1.0000 val_rot_err_deg=1.93 | lr=3.91e-07
-2026-08-26 15:10:03 | src.util.logging_configurator | INFO     | train:250 - epoch=134/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.78 | val_xyz_r2=1.0000 val_rot_err_deg=1.93 | lr=3.91e-07
-2026-08-26 15:11:12 | src.util.logging_configurator | INFO     | train:250 - epoch=135/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.83 | val_xyz_r2=1.0000 val_rot_err_deg=1.90 | lr=3.91e-07
-2026-08-26 15:12:22 | src.util.logging_configurator | INFO     | train:250 - epoch=136/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.79 | val_xyz_r2=1.0000 val_rot_err_deg=2.05 | lr=3.91e-07
-2026-08-26 15:13:30 | src.util.logging_configurator | INFO     | train:250 - epoch=137/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=1.96 | lr=3.91e-07
-2026-08-26 15:14:39 | src.util.logging_configurator | INFO     | train:250 - epoch=138/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.80 | val_xyz_r2=1.0000 val_rot_err_deg=1.94 | lr=1.95e-07
-2026-08-26 15:15:49 | src.util.logging_configurator | INFO     | train:250 - epoch=139/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.78 | val_xyz_r2=1.0000 val_rot_err_deg=1.98 | lr=1.95e-07
-2026-08-26 15:16:58 | src.util.logging_configurator | INFO     | train:250 - epoch=140/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.78 | val_xyz_r2=1.0000 val_rot_err_deg=1.94 | lr=1.95e-07
-2026-08-26 15:18:07 | src.util.logging_configurator | INFO     | train:250 - epoch=141/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.75 | val_xyz_r2=1.0000 val_rot_err_deg=1.89 | lr=1.95e-07
-2026-08-26 15:18:18 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.89 -> runs\pose_estimator\best.pt
-2026-08-26 15:19:16 | src.util.logging_configurator | INFO     | train:250 - epoch=142/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.86 | val_xyz_r2=1.0000 val_rot_err_deg=1.96 | lr=1.95e-07
-2026-08-26 15:20:25 | src.util.logging_configurator | INFO     | train:250 - epoch=143/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.79 | val_xyz_r2=1.0000 val_rot_err_deg=1.95 | lr=1.95e-07
-2026-08-26 15:21:34 | src.util.logging_configurator | INFO     | train:250 - epoch=144/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.89 | val_xyz_r2=1.0000 val_rot_err_deg=1.95 | lr=1.95e-07
-2026-08-26 15:22:42 | src.util.logging_configurator | INFO     | train:250 - epoch=145/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.90 | val_xyz_r2=1.0000 val_rot_err_deg=2.08 | lr=1.95e-07
-2026-08-26 15:23:50 | src.util.logging_configurator | INFO     | train:250 - epoch=146/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=2.08 | lr=1.95e-07
-2026-08-26 15:24:59 | src.util.logging_configurator | INFO     | train:250 - epoch=147/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.93 | val_xyz_r2=1.0000 val_rot_err_deg=1.92 | lr=9.77e-08
-2026-08-26 15:26:07 | src.util.logging_configurator | INFO     | train:250 - epoch=148/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.75 | val_xyz_r2=1.0000 val_rot_err_deg=1.98 | lr=9.77e-08
-2026-08-26 15:27:15 | src.util.logging_configurator | INFO     | train:250 - epoch=149/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.86 | val_xyz_r2=1.0000 val_rot_err_deg=1.91 | lr=9.77e-08
-2026-08-26 15:28:22 | src.util.logging_configurator | INFO     | train:250 - epoch=150/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.72 | val_xyz_r2=1.0000 val_rot_err_deg=1.88 | lr=9.77e-08
-2026-08-26 15:28:33 | src.util.logging_configurator | INFO     | train:279 - New best checkpoint saved | val_xyz_r2=1.0000 val_rot_err_deg=1.88 -> runs\pose_estimator\best.pt
-2026-08-26 15:29:31 | src.util.logging_configurator | INFO     | train:250 - epoch=151/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.81 | val_xyz_r2=1.0000 val_rot_err_deg=2.00 | lr=9.77e-08
-2026-08-26 15:30:38 | src.util.logging_configurator | INFO     | train:250 - epoch=152/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.78 | val_xyz_r2=1.0000 val_rot_err_deg=2.07 | lr=9.77e-08
-2026-08-26 15:31:47 | src.util.logging_configurator | INFO     | train:250 - epoch=153/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=1.96 | lr=9.77e-08
-2026-08-26 15:32:54 | src.util.logging_configurator | INFO     | train:250 - epoch=154/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.81 | val_xyz_r2=1.0000 val_rot_err_deg=2.06 | lr=9.77e-08
-2026-08-26 15:34:02 | src.util.logging_configurator | INFO     | train:250 - epoch=155/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.76 | val_xyz_r2=1.0000 val_rot_err_deg=1.94 | lr=9.77e-08
-2026-08-26 15:35:09 | src.util.logging_configurator | INFO     | train:250 - epoch=156/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.85 | val_xyz_r2=1.0000 val_rot_err_deg=1.91 | lr=4.88e-08
-2026-08-26 15:36:18 | src.util.logging_configurator | INFO     | train:250 - epoch=157/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.80 | val_xyz_r2=1.0000 val_rot_err_deg=1.91 | lr=4.88e-08
-2026-08-26 15:37:25 | src.util.logging_configurator | INFO     | train:250 - epoch=158/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.81 | val_xyz_r2=1.0000 val_rot_err_deg=2.04 | lr=4.88e-08
-2026-08-26 15:38:33 | src.util.logging_configurator | INFO     | train:250 - epoch=159/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=1.92 | lr=4.88e-08
-2026-08-26 15:39:41 | src.util.logging_configurator | INFO     | train:250 - epoch=160/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.80 | val_xyz_r2=1.0000 val_rot_err_deg=1.97 | lr=4.88e-08
-2026-08-26 15:40:49 | src.util.logging_configurator | INFO     | train:250 - epoch=161/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.82 | val_xyz_r2=1.0000 val_rot_err_deg=2.07 | lr=4.88e-08
-2026-08-26 15:41:57 | src.util.logging_configurator | INFO     | train:250 - epoch=162/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=1.97 | lr=2.44e-08
-2026-08-26 15:43:04 | src.util.logging_configurator | INFO     | train:250 - epoch=163/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.93 | val_xyz_r2=1.0000 val_rot_err_deg=2.05 | lr=2.44e-08
-2026-08-26 15:44:12 | src.util.logging_configurator | INFO     | train:250 - epoch=164/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=1.93 | lr=2.44e-08
-2026-08-26 15:45:20 | src.util.logging_configurator | INFO     | train:250 - epoch=165/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.79 | val_xyz_r2=1.0000 val_rot_err_deg=1.94 | lr=2.44e-08
-2026-08-26 15:46:28 | src.util.logging_configurator | INFO     | train:250 - epoch=166/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.81 | val_xyz_r2=1.0000 val_rot_err_deg=2.01 | lr=2.44e-08
-2026-08-26 15:47:36 | src.util.logging_configurator | INFO     | train:250 - epoch=167/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.84 | val_xyz_r2=1.0000 val_rot_err_deg=1.98 | lr=2.44e-08
-2026-08-26 15:48:45 | src.util.logging_configurator | INFO     | train:250 - epoch=168/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.77 | val_xyz_r2=1.0000 val_rot_err_deg=1.94 | lr=1.22e-08
-2026-08-26 15:49:54 | src.util.logging_configurator | INFO     | train:250 - epoch=169/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.87 | val_xyz_r2=1.0000 val_rot_err_deg=1.97 | lr=1.22e-08
-2026-08-26 15:51:02 | src.util.logging_configurator | INFO     | train:250 - epoch=170/200 | train_xyz_r2=1.0000 train_rot_err_deg=2.79 | val_xyz_r2=1.0000 val_rot_err_deg=1.96 | lr=1.22e-08
-2026-08-26 15:51:12 | src.util.logging_configurator | INFO     | train:289 - Early stopping at epoch=170/200 | no val_loss improvement for 20 epochs (best_val_loss=0.032835)
-2026-08-26 15:51:12 | src.util.logging_configurator | INFO     | train:298 - Training completed successfully | checkpoint=runs\pose_estimator\best.pt
-2026-08-26 15:51:12 | src.util.logging_configurator | INFO     | __init__:81 - PoseEvaluator initialized | checkpoint=runs\pose_estimator\best.pt
-2026-08-26 15:51:13 | src.util.logging_configurator | INFO     | evaluate:285 - Starting PoseEstimator evaluation...
-2026-08-26 15:51:18 | src.util.logging_configurator | INFO     | evaluate:289 - Evaluation completed | xyz_r2=1.0000 | rot_mean_angle_error_deg=1.91
-2026-08-26 15:51:18 | src.util.logging_configurator | INFO     | evaluate:296 -   per class | Bread    | n=600  | xyz_r2=1.0000 | rot_mean_angle_error_deg=2.20
-2026-08-26 15:51:18 | src.util.logging_configurator | INFO     | evaluate:296 -   per class | Can      | n=600  | xyz_r2=1.0000 | rot_mean_angle_error_deg=2.62
-2026-08-26 15:51:18 | src.util.logging_configurator | INFO     | evaluate:296 -   per class | Cereal   | n=600  | xyz_r2=1.0000 | rot_mean_angle_error_deg=1.59
-2026-08-26 15:51:18 | src.util.logging_configurator | INFO     | evaluate:296 -   per class | Milk     | n=600  | xyz_r2=1.0000 | rot_mean_angle_error_deg=1.25
-2026-08-26 15:51:18 | src.util.logging_configurator | INFO     | log_test_results:171 - Logged test metrics to W&B.
-2026-08-26 15:51:24 | src.util.logging_configurator | INFO     | evaluate:333 - Exporting PoseEstimator model to ONNX | xyz_r2=1.0000 >= 0.8000 | rot_mean_angle_error_deg=1.91 <= 5.00
-2026-08-26 15:51:25 | src.util.logging_configurator | INFO     | _export_onnx:247 - ONNX export completed | path=runs\pose_estimator\pose_estimator.onnx
-2026-08-26 15:51:26 | src.util.logging_configurator | INFO     | main:155 - Pipeline completed successfully.
+2026-08-26 20:03:15 | src.util.logging_configurator | INFO     | main:28 - Pose pipeline started | generate_pose_dataset=False | train_pose_estimator=True | eval_pose_estimator=True
+2026-08-26 20:03:15 | src.util.logging_configurator | INFO     | resolve:57 - Using torch device: cuda
+2026-08-26 20:03:15 | src.util.logging_configurator | INFO     | resolve:58 - Using ONNX providers: ['CUDAExecutionProvider', 'CPUExecutionProvider']
+2026-08-26 20:03:15 | src.util.logging_configurator | INFO     | __init__:69 - OnnxDetector initialized | model=./runs/detect/robosuite-pickplace-vision/yolov8n-baseline-v1-train/weights/yolo_detector.onnx | providers=['CUDAExecutionProvider', 'CPUExecutionProvider'] | active=['CUDAExecutionProvider', 'CPUExecutionProvider']
+2026-08-26 20:03:19 | src.util.logging_configurator | INFO     | __init__:77 - PoseDatasetGenerator initialized | classes=['Bread', 'Can', 'Cereal', 'Milk'] | save_path=./data/pose_dataset.pkl
+2026-08-26 20:03:19 | src.util.logging_configurator | INFO     | generate:325 - PoseDatasetGenerator: generation skipped.
+2026-08-26 20:03:20 | src.util.logging_configurator | INFO     | __init__:60 - PoseDataLoader initialized | total=16000 | train=11200 | val=2400 | test=2400
+2026-08-26 20:03:26 | src.util.logging_configurator | INFO     | __init__:74 - PoseVisualizer initialized.
+2026-08-26 20:03:26 | src.util.logging_configurator | INFO     | __init__:99 - PoseTrainer initialized | epochs=200 | device=cuda
+2026-08-26 20:03:26 | src.util.logging_configurator | INFO     | train:319 - Starting PoseEstimator training...
+2026-08-26 20:03:26 | src.util.logging_configurator | INFO     | log_model_info:98 - Logged model info to W&B.
+2026-08-26 20:04:42 | src.util.logging_configurator | INFO     | train:342 - epoch=1/200 | train_xyz_mae_cm_macro=5.21 train_rot_err_deg_macro=22.34 | val_xyz_mae_cm_macro=3.70 val_rot_err_deg_macro=7.90 | lr=1.00e-04
+2026-08-26 20:04:52 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=3.70 val_rot_err_deg_macro=7.90 -> runs\pose_estimator\best.pt
+2026-08-26 20:06:15 | src.util.logging_configurator | INFO     | train:342 - epoch=2/200 | train_xyz_mae_cm_macro=3.01 train_rot_err_deg_macro=11.53 | val_xyz_mae_cm_macro=2.12 val_rot_err_deg_macro=5.80 | lr=1.00e-04
+2026-08-26 20:06:25 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=2.12 val_rot_err_deg_macro=5.80 -> runs\pose_estimator\best.pt
+2026-08-26 20:07:48 | src.util.logging_configurator | INFO     | train:342 - epoch=3/200 | train_xyz_mae_cm_macro=1.53 train_rot_err_deg_macro=12.08 | val_xyz_mae_cm_macro=0.94 val_rot_err_deg_macro=8.08 | lr=1.00e-04
+2026-08-26 20:09:20 | src.util.logging_configurator | INFO     | train:342 - epoch=4/200 | train_xyz_mae_cm_macro=0.67 train_rot_err_deg_macro=12.26 | val_xyz_mae_cm_macro=0.39 val_rot_err_deg_macro=6.02 | lr=1.00e-04
+2026-08-26 20:10:53 | src.util.logging_configurator | INFO     | train:342 - epoch=5/200 | train_xyz_mae_cm_macro=0.45 train_rot_err_deg_macro=14.10 | val_xyz_mae_cm_macro=0.40 val_rot_err_deg_macro=14.63 | lr=1.00e-04
+2026-08-26 20:12:25 | src.util.logging_configurator | INFO     | train:342 - epoch=6/200 | train_xyz_mae_cm_macro=0.44 train_rot_err_deg_macro=12.48 | val_xyz_mae_cm_macro=0.38 val_rot_err_deg_macro=5.80 | lr=1.00e-04
+2026-08-26 20:12:35 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.38 val_rot_err_deg_macro=5.80 -> runs\pose_estimator\best.pt
+2026-08-26 20:13:57 | src.util.logging_configurator | INFO     | train:342 - epoch=7/200 | train_xyz_mae_cm_macro=0.46 train_rot_err_deg_macro=10.72 | val_xyz_mae_cm_macro=0.31 val_rot_err_deg_macro=6.29 | lr=1.00e-04
+2026-08-26 20:15:30 | src.util.logging_configurator | INFO     | train:342 - epoch=8/200 | train_xyz_mae_cm_macro=0.42 train_rot_err_deg_macro=10.48 | val_xyz_mae_cm_macro=0.49 val_rot_err_deg_macro=6.08 | lr=1.00e-04
+2026-08-26 20:17:03 | src.util.logging_configurator | INFO     | train:342 - epoch=9/200 | train_xyz_mae_cm_macro=0.51 train_rot_err_deg_macro=8.65 | val_xyz_mae_cm_macro=0.33 val_rot_err_deg_macro=8.77 | lr=1.00e-04
+2026-08-26 20:18:35 | src.util.logging_configurator | INFO     | train:342 - epoch=10/200 | train_xyz_mae_cm_macro=0.44 train_rot_err_deg_macro=11.69 | val_xyz_mae_cm_macro=0.30 val_rot_err_deg_macro=7.14 | lr=1.00e-04
+2026-08-26 20:20:07 | src.util.logging_configurator | INFO     | train:342 - epoch=11/200 | train_xyz_mae_cm_macro=0.49 train_rot_err_deg_macro=12.22 | val_xyz_mae_cm_macro=0.41 val_rot_err_deg_macro=11.80 | lr=1.00e-04
+2026-08-26 20:21:40 | src.util.logging_configurator | INFO     | train:342 - epoch=12/200 | train_xyz_mae_cm_macro=0.44 train_rot_err_deg_macro=12.37 | val_xyz_mae_cm_macro=0.42 val_rot_err_deg_macro=8.67 | lr=5.00e-05
+2026-08-26 20:23:12 | src.util.logging_configurator | INFO     | train:342 - epoch=13/200 | train_xyz_mae_cm_macro=0.30 train_rot_err_deg_macro=11.10 | val_xyz_mae_cm_macro=0.26 val_rot_err_deg_macro=6.22 | lr=5.00e-05
+2026-08-26 20:24:44 | src.util.logging_configurator | INFO     | train:342 - epoch=14/200 | train_xyz_mae_cm_macro=0.33 train_rot_err_deg_macro=9.36 | val_xyz_mae_cm_macro=0.25 val_rot_err_deg_macro=5.12 | lr=5.00e-05
+2026-08-26 20:24:53 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.25 val_rot_err_deg_macro=5.12 -> runs\pose_estimator\best.pt
+2026-08-26 20:26:17 | src.util.logging_configurator | INFO     | train:342 - epoch=15/200 | train_xyz_mae_cm_macro=0.33 train_rot_err_deg_macro=10.15 | val_xyz_mae_cm_macro=0.24 val_rot_err_deg_macro=5.61 | lr=5.00e-05
+2026-08-26 20:27:49 | src.util.logging_configurator | INFO     | train:342 - epoch=16/200 | train_xyz_mae_cm_macro=0.31 train_rot_err_deg_macro=9.71 | val_xyz_mae_cm_macro=0.38 val_rot_err_deg_macro=5.62 | lr=5.00e-05
+2026-08-26 20:29:22 | src.util.logging_configurator | INFO     | train:342 - epoch=17/200 | train_xyz_mae_cm_macro=0.29 train_rot_err_deg_macro=8.35 | val_xyz_mae_cm_macro=0.35 val_rot_err_deg_macro=6.09 | lr=5.00e-05
+2026-08-26 20:30:54 | src.util.logging_configurator | INFO     | train:342 - epoch=18/200 | train_xyz_mae_cm_macro=0.30 train_rot_err_deg_macro=8.20 | val_xyz_mae_cm_macro=0.30 val_rot_err_deg_macro=5.07 | lr=5.00e-05
+2026-08-26 20:31:04 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.30 val_rot_err_deg_macro=5.07 -> runs\pose_estimator\best.pt
+2026-08-26 20:32:27 | src.util.logging_configurator | INFO     | train:342 - epoch=19/200 | train_xyz_mae_cm_macro=0.29 train_rot_err_deg_macro=8.01 | val_xyz_mae_cm_macro=0.45 val_rot_err_deg_macro=4.86 | lr=5.00e-05
+2026-08-26 20:32:36 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.45 val_rot_err_deg_macro=4.86 -> runs\pose_estimator\best.pt
+2026-08-26 20:34:00 | src.util.logging_configurator | INFO     | train:342 - epoch=20/200 | train_xyz_mae_cm_macro=0.28 train_rot_err_deg_macro=8.32 | val_xyz_mae_cm_macro=0.26 val_rot_err_deg_macro=5.82 | lr=5.00e-05
+2026-08-26 20:35:32 | src.util.logging_configurator | INFO     | train:342 - epoch=21/200 | train_xyz_mae_cm_macro=0.31 train_rot_err_deg_macro=7.31 | val_xyz_mae_cm_macro=0.61 val_rot_err_deg_macro=4.01 | lr=5.00e-05
+2026-08-26 20:35:41 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.61 val_rot_err_deg_macro=4.01 -> runs\pose_estimator\best.pt
+2026-08-26 20:37:04 | src.util.logging_configurator | INFO     | train:342 - epoch=22/200 | train_xyz_mae_cm_macro=0.26 train_rot_err_deg_macro=7.35 | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=5.80 | lr=5.00e-05
+2026-08-26 20:38:36 | src.util.logging_configurator | INFO     | train:342 - epoch=23/200 | train_xyz_mae_cm_macro=0.27 train_rot_err_deg_macro=7.27 | val_xyz_mae_cm_macro=0.27 val_rot_err_deg_macro=5.01 | lr=5.00e-05
+2026-08-26 20:40:09 | src.util.logging_configurator | INFO     | train:342 - epoch=24/200 | train_xyz_mae_cm_macro=0.25 train_rot_err_deg_macro=8.77 | val_xyz_mae_cm_macro=0.24 val_rot_err_deg_macro=4.99 | lr=5.00e-05
+2026-08-26 20:41:42 | src.util.logging_configurator | INFO     | train:342 - epoch=25/200 | train_xyz_mae_cm_macro=0.26 train_rot_err_deg_macro=7.17 | val_xyz_mae_cm_macro=0.37 val_rot_err_deg_macro=4.63 | lr=5.00e-05
+2026-08-26 20:43:14 | src.util.logging_configurator | INFO     | train:342 - epoch=26/200 | train_xyz_mae_cm_macro=0.25 train_rot_err_deg_macro=7.50 | val_xyz_mae_cm_macro=0.45 val_rot_err_deg_macro=5.60 | lr=5.00e-05
+2026-08-26 20:44:46 | src.util.logging_configurator | INFO     | train:342 - epoch=27/200 | train_xyz_mae_cm_macro=0.25 train_rot_err_deg_macro=6.89 | val_xyz_mae_cm_macro=0.29 val_rot_err_deg_macro=4.82 | lr=2.50e-05
+2026-08-26 20:46:17 | src.util.logging_configurator | INFO     | train:342 - epoch=28/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.99 | val_xyz_mae_cm_macro=0.24 val_rot_err_deg_macro=4.20 | lr=2.50e-05
+2026-08-26 20:47:49 | src.util.logging_configurator | INFO     | train:342 - epoch=29/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.31 | val_xyz_mae_cm_macro=0.29 val_rot_err_deg_macro=4.03 | lr=2.50e-05
+2026-08-26 20:49:22 | src.util.logging_configurator | INFO     | train:342 - epoch=30/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.54 | val_xyz_mae_cm_macro=0.16 val_rot_err_deg_macro=4.90 | lr=2.50e-05
+2026-08-26 20:50:54 | src.util.logging_configurator | INFO     | train:342 - epoch=31/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.30 | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=3.60 | lr=2.50e-05
+2026-08-26 20:51:04 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=3.60 -> runs\pose_estimator\best.pt
+2026-08-26 20:52:26 | src.util.logging_configurator | INFO     | train:342 - epoch=32/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.66 | val_xyz_mae_cm_macro=0.19 val_rot_err_deg_macro=4.53 | lr=2.50e-05
+2026-08-26 20:53:58 | src.util.logging_configurator | INFO     | train:342 - epoch=33/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.42 | val_xyz_mae_cm_macro=0.20 val_rot_err_deg_macro=3.87 | lr=2.50e-05
+2026-08-26 20:55:30 | src.util.logging_configurator | INFO     | train:342 - epoch=34/200 | train_xyz_mae_cm_macro=0.17 train_rot_err_deg_macro=5.82 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.60 | lr=2.50e-05
+2026-08-26 20:55:40 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.60 -> runs\pose_estimator\best.pt
+2026-08-26 20:57:03 | src.util.logging_configurator | INFO     | train:342 - epoch=35/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=6.19 | val_xyz_mae_cm_macro=0.30 val_rot_err_deg_macro=4.14 | lr=2.50e-05
+2026-08-26 20:58:34 | src.util.logging_configurator | INFO     | train:342 - epoch=36/200 | train_xyz_mae_cm_macro=0.18 train_rot_err_deg_macro=8.36 | val_xyz_mae_cm_macro=0.24 val_rot_err_deg_macro=5.23 | lr=2.50e-05
+2026-08-26 21:00:07 | src.util.logging_configurator | INFO     | train:342 - epoch=37/200 | train_xyz_mae_cm_macro=0.17 train_rot_err_deg_macro=7.03 | val_xyz_mae_cm_macro=0.25 val_rot_err_deg_macro=4.96 | lr=2.50e-05
+2026-08-26 21:01:39 | src.util.logging_configurator | INFO     | train:342 - epoch=38/200 | train_xyz_mae_cm_macro=0.16 train_rot_err_deg_macro=6.18 | val_xyz_mae_cm_macro=0.19 val_rot_err_deg_macro=3.48 | lr=2.50e-05
+2026-08-26 21:01:48 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.19 val_rot_err_deg_macro=3.48 -> runs\pose_estimator\best.pt
+2026-08-26 21:03:11 | src.util.logging_configurator | INFO     | train:342 - epoch=39/200 | train_xyz_mae_cm_macro=0.17 train_rot_err_deg_macro=5.71 | val_xyz_mae_cm_macro=0.16 val_rot_err_deg_macro=3.33 | lr=2.50e-05
+2026-08-26 21:03:21 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.16 val_rot_err_deg_macro=3.33 -> runs\pose_estimator\best.pt
+2026-08-26 21:04:44 | src.util.logging_configurator | INFO     | train:342 - epoch=40/200 | train_xyz_mae_cm_macro=0.17 train_rot_err_deg_macro=5.42 | val_xyz_mae_cm_macro=0.45 val_rot_err_deg_macro=3.44 | lr=2.50e-05
+2026-08-26 21:06:16 | src.util.logging_configurator | INFO     | train:342 - epoch=41/200 | train_xyz_mae_cm_macro=0.17 train_rot_err_deg_macro=5.25 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.06 | lr=2.50e-05
+2026-08-26 21:06:25 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.06 -> runs\pose_estimator\best.pt
+2026-08-26 21:07:47 | src.util.logging_configurator | INFO     | train:342 - epoch=42/200 | train_xyz_mae_cm_macro=0.16 train_rot_err_deg_macro=5.41 | val_xyz_mae_cm_macro=0.41 val_rot_err_deg_macro=3.26 | lr=2.50e-05
+2026-08-26 21:09:19 | src.util.logging_configurator | INFO     | train:342 - epoch=43/200 | train_xyz_mae_cm_macro=0.16 train_rot_err_deg_macro=5.45 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=4.32 | lr=2.50e-05
+2026-08-26 21:10:51 | src.util.logging_configurator | INFO     | train:342 - epoch=44/200 | train_xyz_mae_cm_macro=0.16 train_rot_err_deg_macro=5.39 | val_xyz_mae_cm_macro=0.58 val_rot_err_deg_macro=3.46 | lr=2.50e-05
+2026-08-26 21:12:23 | src.util.logging_configurator | INFO     | train:342 - epoch=45/200 | train_xyz_mae_cm_macro=0.15 train_rot_err_deg_macro=5.38 | val_xyz_mae_cm_macro=0.22 val_rot_err_deg_macro=3.55 | lr=2.50e-05
+2026-08-26 21:13:55 | src.util.logging_configurator | INFO     | train:342 - epoch=46/200 | train_xyz_mae_cm_macro=0.16 train_rot_err_deg_macro=5.47 | val_xyz_mae_cm_macro=0.20 val_rot_err_deg_macro=3.30 | lr=2.50e-05
+2026-08-26 21:15:27 | src.util.logging_configurator | INFO     | train:342 - epoch=47/200 | train_xyz_mae_cm_macro=0.16 train_rot_err_deg_macro=5.45 | val_xyz_mae_cm_macro=0.35 val_rot_err_deg_macro=3.54 | lr=1.25e-05
+2026-08-26 21:16:59 | src.util.logging_configurator | INFO     | train:342 - epoch=48/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.26 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=3.52 | lr=1.25e-05
+2026-08-26 21:18:31 | src.util.logging_configurator | INFO     | train:342 - epoch=49/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.15 | val_xyz_mae_cm_macro=0.21 val_rot_err_deg_macro=3.28 | lr=1.25e-05
+2026-08-26 21:20:03 | src.util.logging_configurator | INFO     | train:342 - epoch=50/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.00 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.02 | lr=1.25e-05
+2026-08-26 21:20:12 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.02 -> runs\pose_estimator\best.pt
+2026-08-26 21:21:37 | src.util.logging_configurator | INFO     | train:342 - epoch=51/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.01 | val_xyz_mae_cm_macro=0.25 val_rot_err_deg_macro=3.20 | lr=1.25e-05
+2026-08-26 21:23:14 | src.util.logging_configurator | INFO     | train:342 - epoch=52/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.25 | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=3.41 | lr=1.25e-05
+2026-08-26 21:24:46 | src.util.logging_configurator | INFO     | train:342 - epoch=53/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.13 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=3.10 | lr=1.25e-05
+2026-08-26 21:26:18 | src.util.logging_configurator | INFO     | train:342 - epoch=54/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.98 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.89 | lr=1.25e-05
+2026-08-26 21:26:28 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.89 -> runs\pose_estimator\best.pt
+2026-08-26 21:27:51 | src.util.logging_configurator | INFO     | train:342 - epoch=55/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=5.03 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=3.49 | lr=1.25e-05
+2026-08-26 21:29:23 | src.util.logging_configurator | INFO     | train:342 - epoch=56/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.88 | val_xyz_mae_cm_macro=0.19 val_rot_err_deg_macro=2.85 | lr=1.25e-05
+2026-08-26 21:29:33 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.19 val_rot_err_deg_macro=2.85 -> runs\pose_estimator\best.pt
+2026-08-26 21:30:56 | src.util.logging_configurator | INFO     | train:342 - epoch=57/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.84 | val_xyz_mae_cm_macro=0.12 val_rot_err_deg_macro=3.02 | lr=1.25e-05
+2026-08-26 21:32:28 | src.util.logging_configurator | INFO     | train:342 - epoch=58/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.66 | val_xyz_mae_cm_macro=0.22 val_rot_err_deg_macro=3.18 | lr=1.25e-05
+2026-08-26 21:34:00 | src.util.logging_configurator | INFO     | train:342 - epoch=59/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.76 | val_xyz_mae_cm_macro=0.16 val_rot_err_deg_macro=2.74 | lr=1.25e-05
+2026-08-26 21:34:11 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.16 val_rot_err_deg_macro=2.74 -> runs\pose_estimator\best.pt
+2026-08-26 21:35:33 | src.util.logging_configurator | INFO     | train:342 - epoch=60/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.57 | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=2.74 | lr=1.25e-05
+2026-08-26 21:35:43 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=2.74 -> runs\pose_estimator\best.pt
+2026-08-26 21:37:05 | src.util.logging_configurator | INFO     | train:342 - epoch=61/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.44 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.54 | lr=1.25e-05
+2026-08-26 21:37:14 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.54 -> runs\pose_estimator\best.pt
+2026-08-26 21:38:37 | src.util.logging_configurator | INFO     | train:342 - epoch=62/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.40 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.85 | lr=1.25e-05
+2026-08-26 21:40:09 | src.util.logging_configurator | INFO     | train:342 - epoch=63/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.28 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.60 | lr=1.25e-05
+2026-08-26 21:41:42 | src.util.logging_configurator | INFO     | train:342 - epoch=64/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.13 | val_xyz_mae_cm_macro=0.20 val_rot_err_deg_macro=2.64 | lr=1.25e-05
+2026-08-26 21:43:14 | src.util.logging_configurator | INFO     | train:342 - epoch=65/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.19 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.73 | lr=1.25e-05
+2026-08-26 21:44:46 | src.util.logging_configurator | INFO     | train:342 - epoch=66/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.29 | val_xyz_mae_cm_macro=0.27 val_rot_err_deg_macro=2.54 | lr=1.25e-05
+2026-08-26 21:44:56 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.27 val_rot_err_deg_macro=2.54 -> runs\pose_estimator\best.pt
+2026-08-26 21:46:18 | src.util.logging_configurator | INFO     | train:342 - epoch=67/200 | train_xyz_mae_cm_macro=0.12 train_rot_err_deg_macro=4.19 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.49 | lr=1.25e-05
+2026-08-26 21:46:28 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.49 -> runs\pose_estimator\best.pt
+2026-08-26 21:47:51 | src.util.logging_configurator | INFO     | train:342 - epoch=68/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.14 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.70 | lr=1.25e-05
+2026-08-26 21:49:24 | src.util.logging_configurator | INFO     | train:342 - epoch=69/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.14 | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=2.48 | lr=1.25e-05
+2026-08-26 21:49:34 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.17 val_rot_err_deg_macro=2.48 -> runs\pose_estimator\best.pt
+2026-08-26 21:50:57 | src.util.logging_configurator | INFO     | train:342 - epoch=70/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.07 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.58 | lr=1.25e-05
+2026-08-26 21:52:29 | src.util.logging_configurator | INFO     | train:342 - epoch=71/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.01 | val_xyz_mae_cm_macro=0.21 val_rot_err_deg_macro=2.63 | lr=1.25e-05
+2026-08-26 21:54:04 | src.util.logging_configurator | INFO     | train:342 - epoch=72/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.02 | val_xyz_mae_cm_macro=0.22 val_rot_err_deg_macro=2.61 | lr=1.25e-05
+2026-08-26 21:55:36 | src.util.logging_configurator | INFO     | train:342 - epoch=73/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.20 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.74 | lr=1.25e-05
+2026-08-26 21:57:06 | src.util.logging_configurator | INFO     | train:342 - epoch=74/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.10 | val_xyz_mae_cm_macro=0.25 val_rot_err_deg_macro=2.43 | lr=1.25e-05
+2026-08-26 21:57:16 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.25 val_rot_err_deg_macro=2.43 -> runs\pose_estimator\best.pt
+2026-08-26 21:58:36 | src.util.logging_configurator | INFO     | train:342 - epoch=75/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=3.80 | val_xyz_mae_cm_macro=0.24 val_rot_err_deg_macro=2.50 | lr=1.25e-05
+2026-08-26 22:00:07 | src.util.logging_configurator | INFO     | train:342 - epoch=76/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=3.99 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=3.01 | lr=1.25e-05
+2026-08-26 22:01:37 | src.util.logging_configurator | INFO     | train:342 - epoch=77/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.06 | val_xyz_mae_cm_macro=0.20 val_rot_err_deg_macro=2.97 | lr=1.25e-05
+2026-08-26 22:03:08 | src.util.logging_configurator | INFO     | train:342 - epoch=78/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=4.16 | val_xyz_mae_cm_macro=0.19 val_rot_err_deg_macro=2.72 | lr=1.25e-05
+2026-08-26 22:04:38 | src.util.logging_configurator | INFO     | train:342 - epoch=79/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=3.90 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.82 | lr=1.25e-05
+2026-08-26 22:06:08 | src.util.logging_configurator | INFO     | train:342 - epoch=80/200 | train_xyz_mae_cm_macro=0.11 train_rot_err_deg_macro=3.99 | val_xyz_mae_cm_macro=0.26 val_rot_err_deg_macro=3.26 | lr=6.25e-06
+2026-08-26 22:07:38 | src.util.logging_configurator | INFO     | train:342 - epoch=81/200 | train_xyz_mae_cm_macro=0.09 train_rot_err_deg_macro=4.22 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.81 | lr=6.25e-06
+2026-08-26 22:09:07 | src.util.logging_configurator | INFO     | train:342 - epoch=82/200 | train_xyz_mae_cm_macro=0.09 train_rot_err_deg_macro=3.96 | val_xyz_mae_cm_macro=0.21 val_rot_err_deg_macro=2.70 | lr=6.25e-06
+2026-08-26 22:10:37 | src.util.logging_configurator | INFO     | train:342 - epoch=83/200 | train_xyz_mae_cm_macro=0.09 train_rot_err_deg_macro=3.99 | val_xyz_mae_cm_macro=0.12 val_rot_err_deg_macro=2.53 | lr=6.25e-06
+2026-08-26 22:12:06 | src.util.logging_configurator | INFO     | train:342 - epoch=84/200 | train_xyz_mae_cm_macro=0.09 train_rot_err_deg_macro=3.86 | val_xyz_mae_cm_macro=0.24 val_rot_err_deg_macro=2.51 | lr=6.25e-06
+2026-08-26 22:13:37 | src.util.logging_configurator | INFO     | train:342 - epoch=85/200 | train_xyz_mae_cm_macro=0.09 train_rot_err_deg_macro=3.87 | val_xyz_mae_cm_macro=0.12 val_rot_err_deg_macro=2.44 | lr=6.25e-06
+2026-08-26 22:15:07 | src.util.logging_configurator | INFO     | train:342 - epoch=86/200 | train_xyz_mae_cm_macro=0.09 train_rot_err_deg_macro=3.79 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.65 | lr=3.13e-06
+2026-08-26 22:16:37 | src.util.logging_configurator | INFO     | train:342 - epoch=87/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.78 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.61 | lr=3.13e-06
+2026-08-26 22:18:08 | src.util.logging_configurator | INFO     | train:342 - epoch=88/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.79 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.66 | lr=3.13e-06
+2026-08-26 22:19:38 | src.util.logging_configurator | INFO     | train:342 - epoch=89/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.91 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.50 | lr=3.13e-06
+2026-08-26 22:21:08 | src.util.logging_configurator | INFO     | train:342 - epoch=90/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.73 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.47 | lr=3.13e-06
+2026-08-26 22:22:38 | src.util.logging_configurator | INFO     | train:342 - epoch=91/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.75 | val_xyz_mae_cm_macro=0.12 val_rot_err_deg_macro=2.38 | lr=3.13e-06
+2026-08-26 22:22:48 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.12 val_rot_err_deg_macro=2.38 -> runs\pose_estimator\best.pt
+2026-08-26 22:24:08 | src.util.logging_configurator | INFO     | train:342 - epoch=92/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.80 | val_xyz_mae_cm_macro=0.20 val_rot_err_deg_macro=2.46 | lr=3.13e-06
+2026-08-26 22:25:38 | src.util.logging_configurator | INFO     | train:342 - epoch=93/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.80 | val_xyz_mae_cm_macro=0.12 val_rot_err_deg_macro=2.48 | lr=3.13e-06
+2026-08-26 22:27:07 | src.util.logging_configurator | INFO     | train:342 - epoch=94/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.64 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.44 | lr=3.13e-06
+2026-08-26 22:28:37 | src.util.logging_configurator | INFO     | train:342 - epoch=95/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.72 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.40 | lr=3.13e-06
+2026-08-26 22:30:08 | src.util.logging_configurator | INFO     | train:342 - epoch=96/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.84 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.63 | lr=3.13e-06
+2026-08-26 22:31:44 | src.util.logging_configurator | INFO     | train:342 - epoch=97/200 | train_xyz_mae_cm_macro=0.08 train_rot_err_deg_macro=3.73 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.46 | lr=1.56e-06
+2026-08-26 22:33:20 | src.util.logging_configurator | INFO     | train:342 - epoch=98/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.73 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.55 | lr=1.56e-06
+2026-08-26 22:34:54 | src.util.logging_configurator | INFO     | train:342 - epoch=99/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.65 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.35 | lr=1.56e-06
+2026-08-26 22:35:04 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.35 -> runs\pose_estimator\best.pt
+2026-08-26 22:36:31 | src.util.logging_configurator | INFO     | train:342 - epoch=100/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.75 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.56 | lr=1.56e-06
+2026-08-26 22:38:01 | src.util.logging_configurator | INFO     | train:342 - epoch=101/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.68 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.38 | lr=1.56e-06
+2026-08-26 22:39:31 | src.util.logging_configurator | INFO     | train:342 - epoch=102/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.70 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.53 | lr=1.56e-06
+2026-08-26 22:41:01 | src.util.logging_configurator | INFO     | train:342 - epoch=103/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.68 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.39 | lr=1.56e-06
+2026-08-26 22:42:31 | src.util.logging_configurator | INFO     | train:342 - epoch=104/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.71 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.46 | lr=1.56e-06
+2026-08-26 22:44:02 | src.util.logging_configurator | INFO     | train:342 - epoch=105/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.77 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.37 | lr=7.81e-07
+2026-08-26 22:45:32 | src.util.logging_configurator | INFO     | train:342 - epoch=106/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.75 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.60 | lr=7.81e-07
+2026-08-26 22:47:02 | src.util.logging_configurator | INFO     | train:342 - epoch=107/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.69 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.39 | lr=7.81e-07
+2026-08-26 22:48:32 | src.util.logging_configurator | INFO     | train:342 - epoch=108/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.53 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.34 | lr=7.81e-07
+2026-08-26 22:48:42 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.34 -> runs\pose_estimator\best.pt
+2026-08-26 22:50:02 | src.util.logging_configurator | INFO     | train:342 - epoch=109/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.62 | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.29 | lr=7.81e-07
+2026-08-26 22:50:12 | src.util.logging_configurator | INFO     | train:379 - New best checkpoint saved | val_xyz_mae_cm_macro=0.13 val_rot_err_deg_macro=2.29 -> runs\pose_estimator\best.pt
+2026-08-26 22:51:32 | src.util.logging_configurator | INFO     | train:342 - epoch=110/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.66 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.42 | lr=7.81e-07
+2026-08-26 22:53:03 | src.util.logging_configurator | INFO     | train:342 - epoch=111/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.62 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.32 | lr=7.81e-07
+2026-08-26 22:54:33 | src.util.logging_configurator | INFO     | train:342 - epoch=112/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.58 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.31 | lr=7.81e-07
+2026-08-26 22:56:02 | src.util.logging_configurator | INFO     | train:342 - epoch=113/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.69 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.60 | lr=7.81e-07
+2026-08-26 22:57:32 | src.util.logging_configurator | INFO     | train:342 - epoch=114/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.66 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.51 | lr=7.81e-07
+2026-08-26 22:59:02 | src.util.logging_configurator | INFO     | train:342 - epoch=115/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.58 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.33 | lr=3.91e-07
+2026-08-26 23:00:32 | src.util.logging_configurator | INFO     | train:342 - epoch=116/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.71 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.50 | lr=3.91e-07
+2026-08-26 23:02:02 | src.util.logging_configurator | INFO     | train:342 - epoch=117/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.56 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.38 | lr=3.91e-07
+2026-08-26 23:03:32 | src.util.logging_configurator | INFO     | train:342 - epoch=118/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.63 | val_xyz_mae_cm_macro=0.15 val_rot_err_deg_macro=2.52 | lr=3.91e-07
+2026-08-26 23:05:02 | src.util.logging_configurator | INFO     | train:342 - epoch=119/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.74 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.45 | lr=3.91e-07
+2026-08-26 23:06:32 | src.util.logging_configurator | INFO     | train:342 - epoch=120/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.56 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.43 | lr=3.91e-07
+2026-08-26 23:08:02 | src.util.logging_configurator | INFO     | train:342 - epoch=121/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.64 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.35 | lr=1.95e-07
+2026-08-26 23:09:32 | src.util.logging_configurator | INFO     | train:342 - epoch=122/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.55 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.48 | lr=1.95e-07
+2026-08-26 23:11:02 | src.util.logging_configurator | INFO     | train:342 - epoch=123/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.65 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.50 | lr=1.95e-07
+2026-08-26 23:12:31 | src.util.logging_configurator | INFO     | train:342 - epoch=124/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.67 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.35 | lr=1.95e-07
+2026-08-26 23:14:02 | src.util.logging_configurator | INFO     | train:342 - epoch=125/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.64 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.37 | lr=1.95e-07
+2026-08-26 23:15:32 | src.util.logging_configurator | INFO     | train:342 - epoch=126/200 | train_xyz_mae_cm_macro=0.06 train_rot_err_deg_macro=3.61 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.48 | lr=1.95e-07
+2026-08-26 23:17:02 | src.util.logging_configurator | INFO     | train:342 - epoch=127/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.52 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.56 | lr=9.77e-08
+2026-08-26 23:18:32 | src.util.logging_configurator | INFO     | train:342 - epoch=128/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.57 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.48 | lr=9.77e-08
+2026-08-26 23:20:02 | src.util.logging_configurator | INFO     | train:342 - epoch=129/200 | train_xyz_mae_cm_macro=0.07 train_rot_err_deg_macro=3.62 | val_xyz_mae_cm_macro=0.14 val_rot_err_deg_macro=2.49 | lr=9.77e-08
+2026-08-26 23:20:12 | src.util.logging_configurator | INFO     | train:390 - Early stopping at epoch=129/200 | no val_loss improvement for 20 epochs (best_val_loss=0.040046)
+2026-08-26 23:20:12 | src.util.logging_configurator | INFO     | train:399 - Training completed successfully | checkpoint=runs\pose_estimator\best.pt
+2026-08-26 23:20:12 | src.util.logging_configurator | INFO     | __init__:81 - PoseEvaluator initialized | checkpoint=runs\pose_estimator\best.pt
+2026-08-26 23:20:12 | src.util.logging_configurator | INFO     | evaluate:309 - Starting PoseEstimator evaluation...
+2026-08-26 23:20:18 | src.util.logging_configurator | INFO     | evaluate:313 - Evaluation completed | xyz_mae_cm_macro=0.13 | rot_mean_angle_error_deg_macro=2.20 | xyz_r2=1.0000
+2026-08-26 23:20:18 | src.util.logging_configurator | INFO     | evaluate:322 -   per class | Bread    | n=600  | xyz_mae_cm=0.15 | rot_mean_angle_error_deg=2.44 | xyz_r2=1.0000
+2026-08-26 23:20:18 | src.util.logging_configurator | INFO     | evaluate:322 -   per class | Can      | n=600  | xyz_mae_cm=0.13 | rot_mean_angle_error_deg=2.94 | xyz_r2=1.0000
+2026-08-26 23:20:18 | src.util.logging_configurator | INFO     | evaluate:322 -   per class | Cereal   | n=600  | xyz_mae_cm=0.13 | rot_mean_angle_error_deg=1.84 | xyz_r2=1.0000
+2026-08-26 23:20:18 | src.util.logging_configurator | INFO     | evaluate:322 -   per class | Milk     | n=600  | xyz_mae_cm=0.13 | rot_mean_angle_error_deg=1.58 | xyz_r2=1.0000
+2026-08-26 23:20:18 | src.util.logging_configurator | INFO     | log_test_results:171 - Logged test metrics to W&B.
+2026-08-26 23:20:23 | src.util.logging_configurator | INFO     | evaluate:364 - Exporting PoseEstimator model to ONNX | every class meets xyz_mae_cm <= 1.00 and rot_mean_angle_error_deg <= 5.00
+2026-08-26 23:20:24 | src.util.logging_configurator | INFO     | _export_onnx:268 - ONNX export completed | path=runs\pose_estimator\pose_estimator.onnx
+2026-08-26 23:20:26 | src.util.logging_configurator | INFO     | main:155 - Pipeline completed successfully.
