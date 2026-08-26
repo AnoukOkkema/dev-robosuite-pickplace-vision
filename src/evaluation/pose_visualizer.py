@@ -13,7 +13,7 @@ from robosuite.utils.transform_utils import quat2mat
 from src.data_preparation.pose_dataset_generator import PoseDatasetGenerator
 from src.evaluation.onnx_detector import OnnxDetector
 from src.models.pose_estimator import PoseEstimator
-from src.util.types import CropRegion, ImageSize, PoseLabel
+from src.util.types import CropRegion, Detection, ImageSize, PoseLabel
 
 
 class PoseVisualizer:
@@ -157,6 +157,26 @@ class PoseVisualizer:
             ax, ay = axis_pixel
             cv2.line(image, (int(ox), int(oy)), (int(ax), int(ay)), axis_color, 2, cv2.LINE_AA)
 
+    @staticmethod
+    def _dedupe_highest_confidence(detections: List[Detection]) -> List[Detection]:
+        """Keeps only the highest-confidence detection per class.
+
+        Unlike PoseDatasetGenerator (which rejects the whole frame on any
+        duplicate/count mismatch, since training data must be exact), this
+        is just a debug visualization -- a best-effort per-class pick keeps
+        the wandb sanity images readable instead of drawing every
+        overlapping box+axes NMS left standing on one object.
+        """
+
+        best_by_class = {}
+
+        for detection in detections:
+            current_best = best_by_class.get(detection.class_id)
+            if current_best is None or detection.confidence > current_best.confidence:
+                best_by_class[detection.class_id] = detection
+
+        return list(best_by_class.values())
+
     def _preprocess_image(self, image_bgr: np.ndarray, image_size: int) -> torch.Tensor:
         """Resizes + normalizes a BGR image into a (1, 3, image_size, image_size) model input tensor."""
 
@@ -210,6 +230,7 @@ class PoseVisualizer:
             return labels_image, None
 
         detections, _, _ = self.detector.predict(image, conf_threshold=0.25, iou_threshold=0.45)
+        detections = self._dedupe_highest_confidence(detections)
 
         pred_image = image.copy()
         was_training = model.training
