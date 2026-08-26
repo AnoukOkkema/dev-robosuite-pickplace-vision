@@ -117,7 +117,7 @@ API_KEY=your-roboflow-api-key
 | `POSE.DROPOUT` | Dropout probability in the class processor and rotation head of `PoseEstimator`. |
 | `POSE.ROTATION_LOSS_WEIGHT` | Weight of the rotation loss relative to the xyz loss in the combined training loss. |
 | `POSE.EARLY_STOPPING_PATIENCE` | Epochs to wait for val_loss to improve before stopping early. `0`/`null` disables it (always runs the full `POSE.EPOCHS`). |
-| `POSE.EXPORT_ONNX_THRESHOLD` / `EXPORT_ROTATION_THRESHOLD_DEG` | Minimum xyz R^2 and maximum average rotation error (degrees) required to export to ONNX — **both** must be met. |
+| `POSE.EXPORT_POSITION_THRESHOLD_CM` / `EXPORT_ROTATION_THRESHOLD_DEG` | Maximum mean absolute xyz error (cm) and mean rotation error (degrees) — **every class** must meet **both** to export to ONNX. |
 
 Each step is independently skipped when its flag is `false`. If a later step
 needs the output of a skipped one (e.g. training without a downloaded
@@ -218,8 +218,9 @@ position **and** 3D rotation. Three steps, each toggled independently via
 2. **Train** (`TRAIN_POSE_ESTIMATOR`) — `PoseTrainer` trains `PoseEstimator`
    with W&B tracking.
 3. **Evaluate** (`EVAL_POSE_ESTIMATOR`) — `PoseEvaluator` evaluates on the
-   test split (xyz R^2 + rotation error, overall and per class) and exports
-   to ONNX if both thresholds are met.
+   test split (xyz error in cm + rotation error, overall/macro-averaged and
+   per class) and exports to ONNX only if every class meets both
+   thresholds.
 
 ### Model (`PoseEstimator`)
 
@@ -250,8 +251,12 @@ Combined loss: xyz MSE + `POSE.ROTATION_LOSS_WEIGHT` × a symmetry-aware
 geodesic rotation loss (angular distance between the predicted rotation
 matrix and the nearest symmetry-equivalent one — a generic
 180°-about-the-local-z-axis candidate, applied to all classes, so that
-visually indistinguishable rotations aren't unfairly penalized). Shared
-Adam optimizer + `ReduceLROnPlateau` scheduler. Early stops after
+visually indistinguishable rotations aren't unfairly penalized). Both
+losses are macro-averaged per class (each class present in a batch
+contributes equally to the gradient) rather than pooled across the whole
+batch — a pooled loss lets visually easier classes dilute a harder one's
+signal, letting it quietly stay under-optimized. Shared Adam optimizer +
+`ReduceLROnPlateau` scheduler. Early stops after
 `POSE.EARLY_STOPPING_PATIENCE` epochs without val_loss improvement (the
 best checkpoint so far is kept).
 
@@ -259,11 +264,17 @@ best checkpoint so far is kept).
 
 [`src/evaluation/pose_evaluator.py`](src/evaluation/pose_evaluator.py)
 
-Evaluates on the test split: xyz R^2 and average rotation error (degrees,
-symmetry-aware), overall and per class. Exports to ONNX
-(`image, bbox, class_onehot, crop` → `xyz, rot6d`) only if **both**
-`POSE.EXPORT_ONNX_THRESHOLD` (xyz R^2) **and**
-`POSE.EXPORT_ROTATION_THRESHOLD_DEG` (rotation error) are met.
+Evaluates on the test split: mean absolute xyz error (cm) and average
+rotation error (degrees, symmetry-aware), both macro-averaged (equal
+weight per class) plus a full per-class breakdown. xyz R^2 is also logged,
+but only as a secondary reference — it's normalized by the *combined*
+position variance across every class (spanning the whole table), so a few
+cm of residual on one small object can round to ~1.0 there while still
+being fatal for that object's own grasp tolerance. Exports to ONNX
+(`image, bbox, class_onehot, crop` → `xyz, rot6d`) only if **every class**
+meets **both** `POSE.EXPORT_POSITION_THRESHOLD_CM` (xyz error) **and**
+`POSE.EXPORT_ROTATION_THRESHOLD_DEG` (rotation error) — a class-averaged
+pass is not enough, since it can hide one weak class behind the others.
 
 ### Visualization (`PoseVisualizer`)
 
