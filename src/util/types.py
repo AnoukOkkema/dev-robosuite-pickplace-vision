@@ -70,6 +70,7 @@ class PoseConfig:
     batch_size: int
     epochs: int
     learning_rate: float
+    early_stopping_patience: int
     val_split: float
     test_split: float
     # Weight of the rotation loss relative to the xyz loss in the
@@ -80,7 +81,6 @@ class PoseConfig:
     # Maximum mean rotation error (degrees) required to export to ONNX.
     # Both this and export_onnx_threshold must be met.
     export_rotation_threshold_deg: float
-    early_stopping_patience: int
 
 
 @dataclass

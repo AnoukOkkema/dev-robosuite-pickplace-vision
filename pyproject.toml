@@ -1,5 +1,5 @@
 [project]
-name = "dev-robot-pickplace-vision"
+name = "dev-robosuite-pickplace-vision"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"

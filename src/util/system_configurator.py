@@ -94,12 +94,12 @@ class ConfigAssembler:
                     batch_size=raw["POSE"]["BATCH_SIZE"],
                     epochs=raw["POSE"]["EPOCHS"],
                     learning_rate=raw["POSE"]["LEARNING_RATE"],
+                    early_stopping_patience=raw["POSE"]["EARLY_STOPPING_PATIENCE"],
                     val_split=raw["POSE"]["VAL_SPLIT"],
                     test_split=raw["POSE"]["TEST_SPLIT"],
                     rotation_loss_weight=raw["POSE"]["ROTATION_LOSS_WEIGHT"],
                     export_onnx_threshold=raw["POSE"]["EXPORT_ONNX_THRESHOLD"],
                     export_rotation_threshold_deg=raw["POSE"]["EXPORT_ROTATION_THRESHOLD_DEG"],
-                    early_stopping_patience=raw["POSE"]["EARLY_STOPPING_PATIENCE"],
                 ),
             )
         except KeyError as error:

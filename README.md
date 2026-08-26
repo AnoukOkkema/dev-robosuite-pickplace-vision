@@ -116,6 +116,7 @@ API_KEY=your-roboflow-api-key
 | `POSE.POS_IMAGE_SIZE` / `ROTATION_IMAGE_SIZE` | Input resolution of the full-scene image (xyz stream) and the object crop (rotation stream), respectively. |
 | `POSE.DROPOUT` | Dropout probability in the class processor and rotation head of `PoseEstimator`. |
 | `POSE.ROTATION_LOSS_WEIGHT` | Weight of the rotation loss relative to the xyz loss in the combined training loss. |
+| `POSE.EARLY_STOPPING_PATIENCE` | Epochs to wait for val_loss to improve before stopping early. `0`/`null` disables it (always runs the full `POSE.EPOCHS`). |
 | `POSE.EXPORT_ONNX_THRESHOLD` / `EXPORT_ROTATION_THRESHOLD_DEG` | Minimum xyz R^2 and maximum average rotation error (degrees) required to export to ONNX — **both** must be met. |
 
 Each step is independently skipped when its flag is `false`. If a later step
@@ -250,7 +251,9 @@ geodesic rotation loss (angular distance between the predicted rotation
 matrix and the nearest symmetry-equivalent one — a generic
 180°-about-the-local-z-axis candidate, applied to all classes, so that
 visually indistinguishable rotations aren't unfairly penalized). Shared
-Adam optimizer + `ReduceLROnPlateau` scheduler.
+Adam optimizer + `ReduceLROnPlateau` scheduler. Early stops after
+`POSE.EARLY_STOPPING_PATIENCE` epochs without val_loss improvement (the
+best checkpoint so far is kept).
 
 ### Evaluation (`PoseEvaluator`)
 
