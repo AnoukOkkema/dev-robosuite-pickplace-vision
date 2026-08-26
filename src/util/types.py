@@ -18,6 +18,21 @@ class RoboflowConfig:
 
 
 @dataclass
+class EnvironmentConfig:
+    """Simulation settings that must match the deployment environment (config.yaml `ENVIRONMENT`).
+
+    robot_base_offset must match the value used by the consuming control
+    repo's environment: PoseEstimator's xyz stream sees the crop_region-
+    cropped agentview frame, robot arm included, so training scenes need
+    to reflect where the arm actually sits in production -- otherwise the
+    model partly keys off the arm's on-screen position and mispredicts by
+    roughly the mismatch.
+    """
+
+    robot_base_offset: Tuple[float, float, float]
+
+
+@dataclass
 class YoloConfig:
     """YOLO training/export settings (config.yaml `YOLO`)."""
 
@@ -97,6 +112,7 @@ class SystemConfig:
     generate_pose_dataset: bool
     train_pose_estimator: bool
     eval_pose_estimator: bool
+    environment: EnvironmentConfig
     roboflow: RoboflowConfig
     yolo: YoloConfig
     ultralytics: UltralyticsConfig

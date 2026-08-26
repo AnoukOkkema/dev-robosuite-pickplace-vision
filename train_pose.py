@@ -61,6 +61,7 @@ def main() -> None:
         image_size=ImageSize(height=1080, width=1920),
         crop_region=CropRegion(y1=350, y2=748, x1=400, x2=975),
         config=PoseDatasetGeneratorConfig(save_path=config.pose.pose_dataset_path),
+        robot_base_offset=config.environment.robot_base_offset,
         logger=logger,
     )
 
@@ -98,6 +99,7 @@ def main() -> None:
             pose_image_size=config.pose.pos_image_size,
             rotation_image_size=config.pose.rotation_image_size,
             device=device,
+            robot_base_offset=config.environment.robot_base_offset,
             logger=logger,
         )
 

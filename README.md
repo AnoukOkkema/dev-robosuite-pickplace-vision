@@ -102,6 +102,7 @@ API_KEY=your-roboflow-api-key
 | `DOWNLOAD_DATASET` | Toggles step 2 (dataset download from Roboflow). |
 | `TRAIN_YOLO` | Toggles step 3 (YOLO training). |
 | `EVAL_YOLO` | Toggles step 4 (YOLO evaluation). |
+| `ENVIRONMENT.ROBOT_BASE_OFFSET` | World-frame XYZ offset applied to the Panda base in the pose pipeline's simulation (`PickPlaceWithRobotOffset`). |
 | `ROBOFLOW.*` | Workspace/project/version/model format for the Roboflow download. |
 | `YOLO.MODEL_NAME` | Base model (e.g. `yolov8n.pt`) training starts from. |
 | `YOLO.EPOCHS` / `IMAGE_SIZE` / `BATCH_SIZE` | Training hyperparameters. |

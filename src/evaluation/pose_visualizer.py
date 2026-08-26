@@ -11,6 +11,7 @@ from robosuite.environments.base import MujocoEnv
 from robosuite.utils.transform_utils import quat2mat
 
 from src.data_preparation.pose_dataset_generator import PoseDatasetGenerator
+from src.environments.pickplace_with_robot_offset import PickPlaceWithRobotOffset
 from src.evaluation.onnx_detector import OnnxDetector
 from src.models.pose_estimator import PoseEstimator
 from src.util.types import CropRegion, Detection, ImageSize, PoseLabel
@@ -39,6 +40,7 @@ class PoseVisualizer:
         pose_image_size: int,
         rotation_image_size: int,
         device: str,
+        robot_base_offset: tuple = (0.0, 0.0, 0.0),
         logger=None,
     ) -> None:
         """
@@ -54,6 +56,10 @@ class PoseVisualizer:
             rotation_image_size (int): Input resolution of the cropped
                 object image (rotation stream), for model inference.
             device (str): Torch device to run model inference on.
+            robot_base_offset (tuple): World-frame XYZ offset applied to the
+                Panda base -- must match PoseDatasetGenerator's, and the
+                consuming control repo's own offset (see
+                PickPlaceWithRobotOffset for why).
             logger: Logger instance. Defaults to a module logger.
 
         Returns:
@@ -66,6 +72,7 @@ class PoseVisualizer:
         self.pose_image_size = pose_image_size
         self.rotation_image_size = rotation_image_size
         self.device = device
+        self.robot_base_offset = robot_base_offset
         self.logger = logger or logging.getLogger(__name__)
 
         self.env = self._init_env()
@@ -79,7 +86,7 @@ class PoseVisualizer:
         controller_config = load_composite_controller_config(controller="BASIC")
 
         return suite.make(
-            "PickPlace",
+            PickPlaceWithRobotOffset.__name__,
             robots="Panda",
             controller_configs=controller_config,
             has_renderer=False,
@@ -89,6 +96,7 @@ class PoseVisualizer:
             camera_heights=self.image_size.height,
             camera_widths=self.image_size.width,
             gripper_types="Robotiq85Gripper",
+            robot_base_offset=self.robot_base_offset,
         )
 
     def _resolve_camera_params(self) -> Tuple[np.ndarray, np.ndarray, float]:

@@ -4,6 +4,7 @@ from typing import Any, Mapping
 import yaml
 
 from src.util.types import (
+    EnvironmentConfig,
     PoseConfig,
     RoboflowConfig,
     SystemConfig,
@@ -56,6 +57,9 @@ class ConfigAssembler:
                 generate_pose_dataset=raw["GENERATE_POSE_DATASET"],
                 train_pose_estimator=raw["TRAIN_POSE_ESTIMATOR"],
                 eval_pose_estimator=raw["EVAL_POSE_ESTIMATOR"],
+                environment=EnvironmentConfig(
+                    robot_base_offset=raw["ENVIRONMENT"]["ROBOT_BASE_OFFSET"],
+                ),
                 roboflow=RoboflowConfig(
                     workspace_name=raw["ROBOFLOW"]["WORKSPACE_NAME"],
                     project_name=raw["ROBOFLOW"]["PROJECT_NAME"],

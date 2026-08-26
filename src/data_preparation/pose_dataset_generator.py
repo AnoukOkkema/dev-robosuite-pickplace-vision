@@ -12,6 +12,7 @@ from robosuite.environments.base import MujocoEnv
 from robosuite.utils.transform_utils import quat2mat
 from tqdm.auto import tqdm
 
+from src.environments.pickplace_with_robot_offset import PickPlaceWithRobotOffset
 from src.evaluation.onnx_detector import OnnxDetector
 from src.util.types import (
     CropRegion,
@@ -44,6 +45,7 @@ class PoseDatasetGenerator:
         image_size: ImageSize,
         crop_region: CropRegion,
         config: Optional[PoseDatasetGeneratorConfig] = None,
+        robot_base_offset: tuple = (0.0, 0.0, 0.0),
         logger=None,
     ) -> None:
         """
@@ -58,6 +60,13 @@ class PoseDatasetGenerator:
                 identical to DatasetGenerator's.
             config (Optional[PoseDatasetGeneratorConfig]): Generation
                 settings. Defaults to PoseDatasetGeneratorConfig().
+            robot_base_offset (tuple): World-frame XYZ offset applied to the
+                Panda base -- must match the consuming control repo's own
+                offset. PoseEstimator's xyz stream sees the crop_region-
+                cropped agentview frame (robot arm included), so training
+                on the wrong arm position teaches the model to partly key
+                off where the arm sits, which mispredicts by roughly the
+                mismatch once deployed.
             logger: Logger instance. Defaults to a module logger.
 
         Returns:
@@ -70,14 +79,17 @@ class PoseDatasetGenerator:
         self.crop_region = crop_region
         self.logger = logger or logging.getLogger(__name__)
         self.config = config or PoseDatasetGeneratorConfig()
+        self.robot_base_offset = robot_base_offset
 
         self.env = self._init_env()
         self.cam_xpos, self.cam_xmat = self._resolve_camera_extrinsics()
 
         self.logger.info(
-            "PoseDatasetGenerator initialized | classes=%s | save_path=%s",
+            "PoseDatasetGenerator initialized | classes=%s | save_path=%s | "
+            "robot_base_offset=%s",
             self.class_names,
             self.config.save_path,
+            self.robot_base_offset,
         )
 
     def _init_env(self) -> MujocoEnv:
@@ -91,7 +103,7 @@ class PoseDatasetGenerator:
         controller_config = load_composite_controller_config(controller="BASIC")
 
         return suite.make(
-            "PickPlace",
+            PickPlaceWithRobotOffset.__name__,
             robots="Panda",
             controller_configs=controller_config,
             has_renderer=False,
@@ -101,6 +113,7 @@ class PoseDatasetGenerator:
             camera_heights=self.image_size.height,
             camera_widths=self.image_size.width,
             gripper_types="Robotiq85Gripper",
+            robot_base_offset=self.robot_base_offset,
         )
 
     def _resolve_camera_extrinsics(self) -> Tuple[np.ndarray, np.ndarray]:
