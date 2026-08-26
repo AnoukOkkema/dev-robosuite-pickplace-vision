@@ -109,6 +109,11 @@ class PoseEvaluator:
 
         return (1.0 - residual_sum_squares / total_sum_squares).item()
 
+    def _mae_cm(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
+        """Mean absolute xyz error in centimetres, over all elements (flattened)."""
+
+        return (torch.abs(targets - preds).mean() * 100.0).item()
+
     def _angle_rad(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> torch.Tensor:
         """Per-sample geodesic angle (radians) between two batches of rotation matrices."""
 
@@ -146,9 +151,14 @@ class PoseEvaluator:
             test_loader (DataLoader): Test set loader.
 
         Returns:
-            Dict[str, Any]: `{"xyz_r2", "rot_mean_angle_error_deg", "per_class"}`,
-                where `per_class` maps each class name to its own
-                `{"xyz_r2", "rot_mean_angle_error_deg", "num_samples"}`.
+            Dict[str, Any]: `{"xyz_r2", "xyz_mae_cm_macro",
+                "rot_mean_angle_error_deg_macro", "rot_mean_angle_error_deg",
+                "per_class"}`, where `per_class` maps each class name to its
+                own `{"xyz_r2", "xyz_mae_cm", "rot_mean_angle_error_deg",
+                "num_samples"}`. The `_macro` scores average the per-class
+                scores with equal weight per class -- the metrics that
+                actually gate ONNX export (see `evaluate`), since a pooled
+                score can hide one weak class behind the others.
         """
 
         all_xyz_pred, all_xyz_target = [], []
@@ -198,9 +208,20 @@ class PoseEvaluator:
 
             per_class[class_name] = {
                 "xyz_r2": self._r2_score(xyz_pred_all[mask], xyz_target_all[mask]),
+                "xyz_mae_cm": self._mae_cm(xyz_pred_all[mask], xyz_target_all[mask]),
                 "rot_mean_angle_error_deg": per_sample_error_deg[mask].mean().item(),
                 "num_samples": int(mask.sum().item()),
             }
+
+        # Macro-average (equal weight per class) instead of a pooled mean:
+        # gates should reflect the worst class, not be washed out by easier
+        # ones (see xyz_r2 docstring).
+        metrics["xyz_mae_cm_macro"] = sum(
+            class_metrics["xyz_mae_cm"] for class_metrics in per_class.values()
+        ) / len(per_class)
+        metrics["rot_mean_angle_error_deg_macro"] = sum(
+            class_metrics["rot_mean_angle_error_deg"] for class_metrics in per_class.values()
+        ) / len(per_class)
 
         metrics["per_class"] = per_class
 
@@ -253,22 +274,25 @@ class PoseEvaluator:
         self,
         test_loader: DataLoader,
         enabled: bool = True,
-        export_onnx_threshold: float = 0.0,
+        export_position_threshold_cm: float = 1.0,
         export_rotation_threshold_deg: float = 15.0,
         onnx_export_path: str = "./runs/pose_estimator/pose_estimator.onnx",
     ) -> Optional[Dict[str, Any]]:
         """
-        Evaluates the PoseEstimator model on a held-out test set,
-        and exports it to ONNX if BOTH the xyz R^2 score and mean rotation
-        angular error meet their thresholds.
+        Evaluates the PoseEstimator model on a held-out test set, and
+        exports it to ONNX only if EVERY class's mean absolute xyz error
+        (cm) AND mean rotation error (degrees) meet their thresholds --
+        a class-averaged score is not enough, since it can hide one weak
+        class behind the others (see xyz_r2's docstring).
 
         Args:
             test_loader (DataLoader): Test set loader.
             enabled (bool): If False, evaluation is skipped.
-            export_onnx_threshold (float): Minimum xyz R^2 score required
-                to export the model to ONNX.
+            export_position_threshold_cm (float): Maximum mean absolute
+                xyz error (cm) every class must meet to export to ONNX.
             export_rotation_threshold_deg (float): Maximum mean rotation
-                angular error (degrees) allowed to export the model to ONNX.
+                angular error (degrees) every class must meet to export
+                to ONNX.
             onnx_export_path (str): Path to write the ONNX export to.
 
         Returns:
@@ -287,18 +311,22 @@ class PoseEvaluator:
         metrics = self._run_test_set(model, test_loader)
 
         self.logger.info(
-            "Evaluation completed | xyz_r2=%.4f | rot_mean_angle_error_deg=%.2f",
+            "Evaluation completed | xyz_mae_cm_macro=%.2f | "
+            "rot_mean_angle_error_deg_macro=%.2f | xyz_r2=%.4f (reference only)",
+            metrics["xyz_mae_cm_macro"],
+            metrics["rot_mean_angle_error_deg_macro"],
             metrics["xyz_r2"],
-            metrics["rot_mean_angle_error_deg"],
         )
 
         for class_name, class_metrics in metrics["per_class"].items():
             self.logger.info(
-                "  per class | %-8s | n=%-4d | xyz_r2=%.4f | rot_mean_angle_error_deg=%.2f",
+                "  per class | %-8s | n=%-4d | xyz_mae_cm=%.2f | "
+                "rot_mean_angle_error_deg=%.2f | xyz_r2=%.4f",
                 class_name,
                 class_metrics["num_samples"],
-                class_metrics["xyz_r2"],
+                class_metrics["xyz_mae_cm"],
                 class_metrics["rot_mean_angle_error_deg"],
+                class_metrics["xyz_r2"],
             )
 
         if self.wandb_callback is not None:
@@ -322,20 +350,21 @@ class PoseEvaluator:
                 test_labels_images, test_pred_images = self.pose_visualizer.capture_media(model=model)
                 self.wandb_callback.log_scene_media("test", test_labels_images, test_pred_images)
 
-        export_ok = (
-            metrics["xyz_r2"] >= export_onnx_threshold
-            and metrics["rot_mean_angle_error_deg"] <= export_rotation_threshold_deg
-        )
+        failing_classes = [
+            class_name
+            for class_name, class_metrics in metrics["per_class"].items()
+            if class_metrics["xyz_mae_cm"] > export_position_threshold_cm
+            or class_metrics["rot_mean_angle_error_deg"] > export_rotation_threshold_deg
+        ]
+        export_ok = not failing_classes
 
         onnx_path = None
 
         if export_ok:
             self.logger.info(
-                "Exporting PoseEstimator model to ONNX | xyz_r2=%.4f >= %.4f | "
-                "rot_mean_angle_error_deg=%.2f <= %.2f",
-                metrics["xyz_r2"],
-                export_onnx_threshold,
-                metrics["rot_mean_angle_error_deg"],
+                "Exporting PoseEstimator model to ONNX | every class meets "
+                "xyz_mae_cm <= %.2f and rot_mean_angle_error_deg <= %.2f",
+                export_position_threshold_cm,
                 export_rotation_threshold_deg,
             )
 
@@ -344,11 +373,16 @@ class PoseEvaluator:
 
         else:
             self.logger.info(
-                "ONNX export skipped | xyz_r2=%.4f (need >= %.4f) | rot_mean_angle_error_deg=%.2f (need <= %.2f)",
-                metrics["xyz_r2"],
-                export_onnx_threshold,
-                metrics["rot_mean_angle_error_deg"],
+                "ONNX export skipped | needs xyz_mae_cm <= %.2f and "
+                "rot_mean_angle_error_deg <= %.2f | failing classes: %s",
+                export_position_threshold_cm,
                 export_rotation_threshold_deg,
+                ", ".join(
+                    f"{class_name} (xyz_mae_cm={metrics['per_class'][class_name]['xyz_mae_cm']:.2f}, "
+                    f"rot_mean_angle_error_deg="
+                    f"{metrics['per_class'][class_name]['rot_mean_angle_error_deg']:.2f})"
+                    for class_name in failing_classes
+                ),
             )
 
         return {

@@ -141,7 +141,7 @@ def main() -> None:
     evaluator.evaluate(
         test_loader=pose_data_loader.test_loader,
         enabled=config.eval_pose_estimator,
-        export_onnx_threshold=config.pose.export_onnx_threshold,
+        export_position_threshold_cm=config.pose.export_position_threshold_cm,
         export_rotation_threshold_deg=config.pose.export_rotation_threshold_deg,
         onnx_export_path=config.pose.onnx_export_path,
     )

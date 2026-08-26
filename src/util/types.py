@@ -76,10 +76,12 @@ class PoseConfig:
     # Weight of the rotation loss relative to the xyz loss in the
     # combined training loss.
     rotation_loss_weight: float
-    # Minimum xyz R^2 required to export the trained model to ONNX.
-    export_onnx_threshold: float
-    # Maximum mean rotation error (degrees) required to export to ONNX.
-    # Both this and export_onnx_threshold must be met.
+    # Maximum mean absolute xyz error (cm) *every* class must meet to
+    # export the trained model to ONNX.
+    export_position_threshold_cm: float
+    # Maximum mean rotation error (degrees) *every* class must meet to
+    # export to ONNX. Both this and export_position_threshold_cm must be
+    # met, per class -- a good class-averaged score is not enough.
     export_rotation_threshold_deg: float
 
 

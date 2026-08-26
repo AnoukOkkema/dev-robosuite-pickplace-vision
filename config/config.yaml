@@ -41,7 +41,7 @@ POSE:
   CHECKPOINT_PATH: "./runs/pose_estimator/best.pt"
   ONNX_EXPORT_PATH: "./runs/pose_estimator/pose_estimator.onnx"
   NUM_DATASET_IMAGES: 4000
-  POS_IMAGE_SIZE: 224
+  POS_IMAGE_SIZE: 320
   ROTATION_IMAGE_SIZE: 128
   DROPOUT: 0.3
   BATCH_SIZE: 16
@@ -51,5 +51,8 @@ POSE:
   VAL_SPLIT: 0.15
   TEST_SPLIT: 0.15
   ROTATION_LOSS_WEIGHT: 1.0
-  EXPORT_ONNX_THRESHOLD: 0.8
+  # Every class's mean absolute xyz error (cm) AND rotation error (below)
+  # must meet its threshold before the model is exported to ONNX -- a
+  # class-averaged score can no longer hide one bad class (see xyz_r2).
+  EXPORT_POSITION_THRESHOLD_CM: 1.0
   EXPORT_ROTATION_THRESHOLD_DEG: 5.0

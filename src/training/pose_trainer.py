@@ -63,6 +63,8 @@ class PoseTrainer:
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.device = device
+        self.num_classes = model.num_classes
+        self.class_names = train_loader.dataset.dataset.class_names
 
         self.epochs = epochs
         self.checkpoint_path = Path(checkpoint_path)
@@ -111,6 +113,56 @@ class PoseTrainer:
 
         return (1.0 - residual_sum_squares / total_sum_squares).item()
 
+    def _macro_mse_by_class(
+        self, pred: torch.Tensor, target: torch.Tensor, class_indices: torch.Tensor
+    ) -> torch.Tensor:
+        """MSE averaged per class with equal weight (classes absent from this
+        batch are skipped), instead of one MSE pooled over the whole batch.
+
+        A pooled loss lets whichever classes are visually easier dominate
+        the gradient every step; macro-averaging guarantees each class
+        that's present pulls equally, so a harder class (e.g. a small,
+        round object) can't be quietly under-optimized behind easier ones.
+        """
+
+        per_class_losses = []
+
+        for class_index in range(self.num_classes):
+            mask = class_indices == class_index
+
+            if mask.sum() == 0:
+                continue
+
+            per_class_losses.append(F.mse_loss(pred[mask], target[mask]))
+
+        return torch.stack(per_class_losses).mean()
+
+    def _per_class_metrics(
+        self,
+        xyz_pred: torch.Tensor,
+        xyz_target: torch.Tensor,
+        rot_pred: torch.Tensor,
+        rot_target: torch.Tensor,
+        class_indices: torch.Tensor,
+    ) -> dict:
+        """Per-class mean absolute xyz error (cm) and mean rotation error (degrees)."""
+
+        per_sample_error_deg = torch.rad2deg(self._symmetry_min_angle_rad(rot_pred, rot_target))
+        per_class = {}
+
+        for class_index, class_name in enumerate(self.class_names):
+            mask = class_indices == class_index
+
+            if mask.sum().item() == 0:
+                continue
+
+            per_class[class_name] = {
+                "xyz_mae_cm": (torch.abs(xyz_target[mask] - xyz_pred[mask]).mean() * 100.0).item(),
+                "rot_mean_angle_error_deg": per_sample_error_deg[mask].mean().item(),
+            }
+
+        return per_class
+
     def _per_sample_angle_rad(self, rot_pred: torch.Tensor, rot_target: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
         """Per-sample geodesic angle (radians): arccos((trace(R_pred^T @ R_target) - 1) / 2)."""
 
@@ -133,12 +185,29 @@ class PoseTrainer:
 
         return candidate_angles.min(dim=0).values
 
-    def _rotation_loss(self, rot6d_pred: torch.Tensor, rot_cam_target: torch.Tensor) -> torch.Tensor:
-        """Symmetry-aware geodesic rotation loss (radians)."""
+    def _rotation_loss(
+        self, rot6d_pred: torch.Tensor, rot_cam_target: torch.Tensor, class_indices: torch.Tensor
+    ) -> torch.Tensor:
+        """Symmetry-aware geodesic rotation loss (radians), macro-averaged per class
+
+        (see `_macro_mse_by_class` for why: a pooled mean lets easier
+        classes dilute a harder class's gradient signal).
+        """
 
         rot_pred = PoseEstimator.rot6d_to_matrix(rot6d_pred)
+        per_sample_angle = self._symmetry_min_angle_rad(rot_pred, rot_cam_target)
 
-        return self._symmetry_min_angle_rad(rot_pred, rot_cam_target).mean()
+        per_class_losses = []
+
+        for class_index in range(self.num_classes):
+            mask = class_indices == class_index
+
+            if mask.sum() == 0:
+                continue
+
+            per_class_losses.append(per_sample_angle[mask].mean())
+
+        return torch.stack(per_class_losses).mean()
 
     def _mean_angular_error_deg(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> float:
         """Mean symmetry-aware geodesic rotation error over the batch, in degrees."""
@@ -157,8 +226,13 @@ class PoseTrainer:
                 if False, runs in eval mode with gradients disabled.
 
         Returns:
-            dict: `{"xyz_loss", "rot_loss", "xyz_r2", "rot_mean_angle_error_deg"}`,
-                averaged/aggregated over the whole loader.
+            dict: `{"xyz_loss", "rot_loss", "xyz_r2", "rot_mean_angle_error_deg",
+                "xyz_mae_cm_macro", "rot_mean_angle_error_deg_macro", "per_class"}`,
+                averaged/aggregated over the whole loader. The `_macro`
+                scores (and the per-class breakdown) average with equal
+                weight per class -- see `_macro_mse_by_class` -- while
+                `xyz_r2` and the pooled `rot_mean_angle_error_deg` are kept
+                only as secondary reference metrics.
         """
 
         self.model.train(is_training)
@@ -169,6 +243,7 @@ class PoseTrainer:
 
         all_xyz_pred, all_xyz_target = [], []
         all_rot_pred, all_rot_target = [], []
+        all_class_indices = []
 
         for image, bbox, class_onehot, crop, xyz, rot6d_target in loader:
             image = image.to(self.device)
@@ -177,14 +252,15 @@ class PoseTrainer:
             crop = crop.to(self.device)
             xyz = xyz.to(self.device)
             rot6d_target = rot6d_target.to(self.device)
+            class_indices = class_onehot.argmax(dim=1)
 
             rot_cam_target = PoseEstimator.rot6d_to_matrix(rot6d_target)
 
             with torch.set_grad_enabled(is_training):
                 xyz_pred, rot6d_pred = self.model(image, bbox, class_onehot, crop)
 
-                xyz_loss = F.mse_loss(xyz_pred, xyz)
-                rot_loss = self._rotation_loss(rot6d_pred, rot_cam_target)
+                xyz_loss = self._macro_mse_by_class(xyz_pred, xyz, class_indices)
+                rot_loss = self._rotation_loss(rot6d_pred, rot_cam_target, class_indices)
                 loss = xyz_loss + self.rotation_loss_weight * rot_loss
 
                 if is_training:
@@ -200,17 +276,28 @@ class PoseTrainer:
             all_xyz_target.append(xyz.detach())
             all_rot_pred.append(PoseEstimator.rot6d_to_matrix(rot6d_pred).detach())
             all_rot_target.append(rot_cam_target.detach())
+            all_class_indices.append(class_indices.detach())
 
         xyz_pred_all = torch.cat(all_xyz_pred, dim=0)
         xyz_target_all = torch.cat(all_xyz_target, dim=0)
         rot_pred_all = torch.cat(all_rot_pred, dim=0)
         rot_target_all = torch.cat(all_rot_target, dim=0)
+        class_indices_all = torch.cat(all_class_indices, dim=0)
+
+        per_class = self._per_class_metrics(
+            xyz_pred_all, xyz_target_all, rot_pred_all, rot_target_all, class_indices_all
+        )
 
         return {
             "xyz_loss": total_xyz_loss / num_batches,
             "rot_loss": total_rot_loss / num_batches,
             "xyz_r2": self._r2_score(xyz_pred_all, xyz_target_all),
             "rot_mean_angle_error_deg": self._mean_angular_error_deg(rot_pred_all, rot_target_all),
+            "xyz_mae_cm_macro": sum(c["xyz_mae_cm"] for c in per_class.values()) / len(per_class),
+            "rot_mean_angle_error_deg_macro": (
+                sum(c["rot_mean_angle_error_deg"] for c in per_class.values()) / len(per_class)
+            ),
+            "per_class": per_class,
         }
 
     def train(self, enabled: bool = True) -> Optional[Path]:
@@ -244,20 +331,33 @@ class PoseTrainer:
             train_metrics = self._run_epoch(self.train_loader, is_training=True)
             val_metrics = self._run_epoch(self.val_loader, is_training=False)
 
+            # Per-class breakdown (val only, logged below) isn't sent to
+            # wandb's per-epoch scalar log.
+            train_metrics.pop("per_class")
+            val_per_class = val_metrics.pop("per_class")
+
             val_loss = val_metrics["xyz_loss"] + self.rotation_loss_weight * val_metrics["rot_loss"]
             self.scheduler.step(val_loss)
 
             self.logger.info(
-                "epoch=%d/%d | train_xyz_r2=%.4f train_rot_err_deg=%.2f | "
-                "val_xyz_r2=%.4f val_rot_err_deg=%.2f | lr=%.2e",
+                "epoch=%d/%d | train_xyz_mae_cm_macro=%.2f train_rot_err_deg_macro=%.2f | "
+                "val_xyz_mae_cm_macro=%.2f val_rot_err_deg_macro=%.2f | lr=%.2e",
                 epoch + 1,
                 self.epochs,
-                train_metrics["xyz_r2"],
-                train_metrics["rot_mean_angle_error_deg"],
-                val_metrics["xyz_r2"],
-                val_metrics["rot_mean_angle_error_deg"],
+                train_metrics["xyz_mae_cm_macro"],
+                train_metrics["rot_mean_angle_error_deg_macro"],
+                val_metrics["xyz_mae_cm_macro"],
+                val_metrics["rot_mean_angle_error_deg_macro"],
                 self.optimizer.param_groups[0]["lr"],
             )
+
+            for class_name, class_metrics in val_per_class.items():
+                self.logger.debug(
+                    "  val per class | %-8s | xyz_mae_cm=%.2f | rot_mean_angle_error_deg=%.2f",
+                    class_name,
+                    class_metrics["xyz_mae_cm"],
+                    class_metrics["rot_mean_angle_error_deg"],
+                )
 
             if self.wandb_callback is not None:
                 self.wandb_callback.log_epoch(epoch + 1, train_metrics, val_metrics)
@@ -277,9 +377,10 @@ class PoseTrainer:
                 torch.save(self.model.state_dict(), self.checkpoint_path)
 
                 self.logger.info(
-                    "New best checkpoint saved | val_xyz_r2=%.4f val_rot_err_deg=%.2f -> %s",
-                    val_metrics["xyz_r2"],
-                    val_metrics["rot_mean_angle_error_deg"],
+                    "New best checkpoint saved | val_xyz_mae_cm_macro=%.2f "
+                    "val_rot_err_deg_macro=%.2f -> %s",
+                    val_metrics["xyz_mae_cm_macro"],
+                    val_metrics["rot_mean_angle_error_deg_macro"],
                     self.checkpoint_path,
                 )
             else:

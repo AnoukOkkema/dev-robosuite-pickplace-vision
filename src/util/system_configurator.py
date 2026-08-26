@@ -98,7 +98,7 @@ class ConfigAssembler:
                     val_split=raw["POSE"]["VAL_SPLIT"],
                     test_split=raw["POSE"]["TEST_SPLIT"],
                     rotation_loss_weight=raw["POSE"]["ROTATION_LOSS_WEIGHT"],
-                    export_onnx_threshold=raw["POSE"]["EXPORT_ONNX_THRESHOLD"],
+                    export_position_threshold_cm=raw["POSE"]["EXPORT_POSITION_THRESHOLD_CM"],
                     export_rotation_threshold_deg=raw["POSE"]["EXPORT_ROTATION_THRESHOLD_DEG"],
                 ),
             )
