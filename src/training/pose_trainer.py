@@ -147,6 +147,28 @@ class PoseTrainer:
 
         return torch.stack(per_class_losses).mean()
 
+    def _rotation_scored_mask(self, class_indices: torch.Tensor) -> torch.Tensor:
+        """Boolean mask selecting samples whose class is not rotation-symmetric.
+
+        Used to keep rotation_symmetric_classes (e.g. Can) out of the
+        pooled rot_mean_angle_error_deg reference metric too -- otherwise
+        their meaningless rotation "error" still inflates/distorts that
+        number every epoch, even though the loss and the macro metric
+        already exclude them.
+        """
+
+        symmetric_indices = [
+            index
+            for index, name in enumerate(self.class_names)
+            if name in self.rotation_symmetric_classes
+        ]
+
+        if not symmetric_indices:
+            return torch.ones_like(class_indices, dtype=torch.bool)
+
+        symmetric_indices_tensor = torch.tensor(symmetric_indices, device=class_indices.device)
+        return ~torch.isin(class_indices, symmetric_indices_tensor)
+
     def _per_class_metrics(
         self,
         xyz_pred: torch.Tensor,
@@ -308,12 +330,15 @@ class PoseTrainer:
         rot_scored_classes = {
             name: c for name, c in per_class.items() if name not in self.rotation_symmetric_classes
         }
+        rotation_scored_mask = self._rotation_scored_mask(class_indices_all)
 
         return {
             "xyz_loss": total_xyz_loss / num_batches,
             "rot_loss": total_rot_loss / num_batches,
             "xyz_r2": self._r2_score(xyz_pred_all, xyz_target_all),
-            "rot_mean_angle_error_deg": self._mean_angular_error_deg(rot_pred_all, rot_target_all),
+            "rot_mean_angle_error_deg": self._mean_angular_error_deg(
+                rot_pred_all[rotation_scored_mask], rot_target_all[rotation_scored_mask]
+            ),
             "xyz_mae_cm_macro": sum(c["xyz_mae_cm"] for c in per_class.values()) / len(per_class),
             "rot_mean_angle_error_deg_macro": (
                 sum(c["rot_mean_angle_error_deg"] for c in rot_scored_classes.values())
@@ -374,11 +399,19 @@ class PoseTrainer:
             )
 
             for class_name, class_metrics in val_per_class.items():
+                # Rotation is meaningless for rotation-symmetric classes
+                # (see rotation_symmetric_classes) -- a real-looking number
+                # for it just invites mistaking noise for a regression.
+                rotation_display = (
+                    "n/a (rotation-symmetric)"
+                    if class_name in self.rotation_symmetric_classes
+                    else f"{class_metrics['rot_mean_angle_error_deg']:.2f}"
+                )
                 self.logger.debug(
-                    "  val per class | %-8s | xyz_mae_cm=%.2f | rot_mean_angle_error_deg=%.2f",
+                    "  val per class | %-8s | xyz_mae_cm=%.2f | rot_mean_angle_error_deg=%s",
                     class_name,
                     class_metrics["xyz_mae_cm"],
-                    class_metrics["rot_mean_angle_error_deg"],
+                    rotation_display,
                 )
 
             if self.wandb_callback is not None:

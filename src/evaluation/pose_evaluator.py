@@ -131,6 +131,26 @@ class PoseEvaluator:
 
         return torch.acos(cos_angle)
 
+    def _rotation_scored_mask(self, class_indices: torch.Tensor, class_names: list) -> torch.Tensor:
+        """Boolean mask selecting samples whose class is not rotation-symmetric.
+
+        Keeps rotation_symmetric_classes (e.g. Can) out of the pooled
+        rot_mean_angle_error_deg reference metric -- otherwise their
+        meaningless rotation "error" still inflates/distorts that number.
+        """
+
+        symmetric_indices = [
+            index
+            for index, name in enumerate(class_names)
+            if name in self.rotation_symmetric_classes
+        ]
+
+        if not symmetric_indices:
+            return torch.ones_like(class_indices, dtype=torch.bool)
+
+        symmetric_indices_tensor = torch.tensor(symmetric_indices, device=class_indices.device)
+        return ~torch.isin(class_indices, symmetric_indices_tensor)
+
     def _per_sample_angle_deg(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> torch.Tensor:
         """
         Per-sample geodesic rotation error, in degrees, to the *closest*
@@ -199,13 +219,17 @@ class PoseEvaluator:
         class_indices_all = torch.cat(all_class_indices, dim=0)
 
         per_sample_error_deg = self._per_sample_angle_deg(rot_pred_all, rot_target_all)
+        class_names = test_loader.dataset.dataset.class_names
+        rotation_scored_mask = self._rotation_scored_mask(class_indices_all, class_names)
 
         metrics = {
             "xyz_r2": self._r2_score(xyz_pred_all, xyz_target_all),
-            "rot_mean_angle_error_deg": per_sample_error_deg.mean().item(),
+            # Excludes rotation_symmetric_classes (e.g. Can) -- otherwise
+            # their meaningless rotation "error" still inflates/distorts
+            # this pooled reference number.
+            "rot_mean_angle_error_deg": per_sample_error_deg[rotation_scored_mask].mean().item(),
         }
 
-        class_names = test_loader.dataset.dataset.class_names
         per_class = {}
 
         for class_index, class_name in enumerate(class_names):
@@ -333,13 +357,21 @@ class PoseEvaluator:
         )
 
         for class_name, class_metrics in metrics["per_class"].items():
+            # Rotation is meaningless for rotation-symmetric classes (see
+            # rotation_symmetric_classes) -- printing a real-looking number
+            # for it just invites mistaking noise for a quality problem.
+            rotation_display = (
+                "n/a (rotation-symmetric)"
+                if class_name in self.rotation_symmetric_classes
+                else f"{class_metrics['rot_mean_angle_error_deg']:.2f}"
+            )
             self.logger.info(
                 "  per class | %-8s | n=%-4d | xyz_mae_cm=%.2f | "
-                "rot_mean_angle_error_deg=%.2f | xyz_r2=%.4f",
+                "rot_mean_angle_error_deg=%s | xyz_r2=%.4f",
                 class_name,
                 class_metrics["num_samples"],
                 class_metrics["xyz_mae_cm"],
-                class_metrics["rot_mean_angle_error_deg"],
+                rotation_display,
                 class_metrics["xyz_r2"],
             )
 
@@ -356,6 +388,14 @@ class PoseEvaluator:
                 wandb_metrics.update({
                     f"per_class/{class_name}/{key}": value
                     for key, value in class_metrics.items()
+                    # Rotation is meaningless noise for rotation-symmetric
+                    # classes (see rotation_symmetric_classes) -- kept out
+                    # of W&B too, matching the text log's "n/a" treatment,
+                    # so it can't show up as a false outlier on a chart.
+                    if not (
+                        key == "rot_mean_angle_error_deg"
+                        and class_name in self.rotation_symmetric_classes
+                    )
                 })
 
             self.wandb_callback.log_test_results(wandb_metrics)
