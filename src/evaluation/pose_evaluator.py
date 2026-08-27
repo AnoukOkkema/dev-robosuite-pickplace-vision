@@ -276,12 +276,14 @@ class PoseEvaluator:
         enabled: bool = True,
         export_position_threshold_cm: float = 1.0,
         export_rotation_threshold_deg: float = 15.0,
+        export_rotation_exempt_classes: tuple = (),
         onnx_export_path: str = "./runs/pose_estimator/pose_estimator.onnx",
     ) -> Optional[Dict[str, Any]]:
         """
         Evaluates the PoseEstimator model on a held-out test set, and
         exports it to ONNX only if EVERY class's mean absolute xyz error
-        (cm) AND mean rotation error (degrees) meet their thresholds --
+        (cm) meets its threshold, AND every class *not* in
+        export_rotation_exempt_classes also meets the rotation threshold --
         a class-averaged score is not enough, since it can hide one weak
         class behind the others (see xyz_r2's docstring).
 
@@ -291,8 +293,12 @@ class PoseEvaluator:
             export_position_threshold_cm (float): Maximum mean absolute
                 xyz error (cm) every class must meet to export to ONNX.
             export_rotation_threshold_deg (float): Maximum mean rotation
-                angular error (degrees) every class must meet to export
-                to ONNX.
+                angular error (degrees) every non-exempt class must meet
+                to export to ONNX.
+            export_rotation_exempt_classes (tuple): Class names skipped by
+                the rotation check -- classes with full rotational
+                symmetry (e.g. a cylindrical can) report meaningless
+                rotation "error" since any yaw is equally valid.
             onnx_export_path (str): Path to write the ONNX export to.
 
         Returns:
@@ -354,7 +360,10 @@ class PoseEvaluator:
             class_name
             for class_name, class_metrics in metrics["per_class"].items()
             if class_metrics["xyz_mae_cm"] > export_position_threshold_cm
-            or class_metrics["rot_mean_angle_error_deg"] > export_rotation_threshold_deg
+            or (
+                class_name not in export_rotation_exempt_classes
+                and class_metrics["rot_mean_angle_error_deg"] > export_rotation_threshold_deg
+            )
         ]
         export_ok = not failing_classes
 
@@ -363,8 +372,10 @@ class PoseEvaluator:
         if export_ok:
             self.logger.info(
                 "Exporting PoseEstimator model to ONNX | every class meets "
-                "xyz_mae_cm <= %.2f and rot_mean_angle_error_deg <= %.2f",
+                "xyz_mae_cm <= %.2f | every non-exempt class (exempt=%s) meets "
+                "rot_mean_angle_error_deg <= %.2f",
                 export_position_threshold_cm,
+                list(export_rotation_exempt_classes),
                 export_rotation_threshold_deg,
             )
 

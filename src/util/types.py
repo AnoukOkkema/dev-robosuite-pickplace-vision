@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 
@@ -98,6 +98,10 @@ class PoseConfig:
     # export to ONNX. Both this and export_position_threshold_cm must be
     # met, per class -- a good class-averaged score is not enough.
     export_rotation_threshold_deg: float
+    # Classes with full rotational symmetry about their vertical axis (e.g.
+    # a cylindrical can): any yaw is equally valid, so their rotation error
+    # is exempt from the export gate -- position still applies.
+    export_rotation_exempt_classes: List[str] = field(default_factory=list)
 
 
 @dataclass

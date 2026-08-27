@@ -145,6 +145,7 @@ def main() -> None:
         enabled=config.eval_pose_estimator,
         export_position_threshold_cm=config.pose.export_position_threshold_cm,
         export_rotation_threshold_deg=config.pose.export_rotation_threshold_deg,
+        export_rotation_exempt_classes=config.pose.export_rotation_exempt_classes,
         onnx_export_path=config.pose.onnx_export_path,
     )
 
