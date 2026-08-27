@@ -27,6 +27,7 @@ class PoseTrainer:
         rotation_loss_weight: float,
         logger,
         early_stopping_patience: Optional[int] = None,
+        rotation_symmetric_classes: list = (),
         wandb_callback=None,
         pose_visualizer=None,
     ) -> None:
@@ -48,6 +49,14 @@ class PoseTrainer:
             early_stopping_patience (Optional[int]): Epochs to wait for
                 val_loss to improve before stopping early. None/0 disables
                 it (always runs the full `epochs`).
+            rotation_symmetric_classes (list): Class names with full
+                rotational symmetry about their vertical axis (e.g. a
+                cylindrical can) -- any yaw is equally valid, so their
+                rotation target is meaningless noise. Excluded from the
+                rotation loss (shared across all classes' rotation
+                backbone, so noisy targets would otherwise pollute
+                gradients for every class) and from the reported macro
+                rotation metric. xyz position is unaffected.
             wandb_callback: Optional PoseWandBCallback for per-epoch/model
                 logging. If None, training still runs but nothing is
                 logged to W&B.
@@ -65,6 +74,7 @@ class PoseTrainer:
         self.device = device
         self.num_classes = model.num_classes
         self.class_names = train_loader.dataset.dataset.class_names
+        self.rotation_symmetric_classes = set(rotation_symmetric_classes)
 
         self.epochs = epochs
         self.checkpoint_path = Path(checkpoint_path)
@@ -200,12 +210,18 @@ class PoseTrainer:
         per_class_losses = []
 
         for class_index in range(self.num_classes):
+            if self.class_names[class_index] in self.rotation_symmetric_classes:
+                continue
+
             mask = class_indices == class_index
 
             if mask.sum() == 0:
                 continue
 
             per_class_losses.append(per_sample_angle[mask].mean())
+
+        if not per_class_losses:
+            return rot6d_pred.new_zeros(())
 
         return torch.stack(per_class_losses).mean()
 
@@ -287,6 +303,11 @@ class PoseTrainer:
         per_class = self._per_class_metrics(
             xyz_pred_all, xyz_target_all, rot_pred_all, rot_target_all, class_indices_all
         )
+        # xyz still matters for every class; rotation only for classes
+        # where it's meaningful (see rotation_symmetric_classes).
+        rot_scored_classes = {
+            name: c for name, c in per_class.items() if name not in self.rotation_symmetric_classes
+        }
 
         return {
             "xyz_loss": total_xyz_loss / num_batches,
@@ -295,7 +316,8 @@ class PoseTrainer:
             "rot_mean_angle_error_deg": self._mean_angular_error_deg(rot_pred_all, rot_target_all),
             "xyz_mae_cm_macro": sum(c["xyz_mae_cm"] for c in per_class.values()) / len(per_class),
             "rot_mean_angle_error_deg_macro": (
-                sum(c["rot_mean_angle_error_deg"] for c in per_class.values()) / len(per_class)
+                sum(c["rot_mean_angle_error_deg"] for c in rot_scored_classes.values())
+                / len(rot_scored_classes)
             ),
             "per_class": per_class,
         }

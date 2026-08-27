@@ -120,6 +120,7 @@ def main() -> None:
         rotation_loss_weight=config.pose.rotation_loss_weight,
         logger=logger,
         early_stopping_patience=config.pose.early_stopping_patience,
+        rotation_symmetric_classes=config.pose.rotation_symmetric_classes,
         wandb_callback=wandb_callback,
         pose_visualizer=pose_visualizer,
     )
@@ -136,6 +137,7 @@ def main() -> None:
         rotation_image_size=config.pose.rotation_image_size,
         num_classes=len(detector.class_names),
         logger=logger,
+        rotation_symmetric_classes=config.pose.rotation_symmetric_classes,
         wandb_callback=wandb_callback,
         pose_visualizer=pose_visualizer,
     )
@@ -145,7 +147,6 @@ def main() -> None:
         enabled=config.eval_pose_estimator,
         export_position_threshold_cm=config.pose.export_position_threshold_cm,
         export_rotation_threshold_deg=config.pose.export_rotation_threshold_deg,
-        export_rotation_exempt_classes=config.pose.export_rotation_exempt_classes,
         onnx_export_path=config.pose.onnx_export_path,
     )
 

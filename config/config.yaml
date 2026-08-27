@@ -61,8 +61,10 @@ POSE:
   EXPORT_POSITION_THRESHOLD_CM: 1.0
   EXPORT_ROTATION_THRESHOLD_DEG: 5.0
   # Classes with full rotational symmetry about their vertical axis: any
-  # yaw is visually and functionally equivalent, so the reported rotation
-  # error is meaningless noise, not a real capability gap. The control
-  # repo's controller already grasps these yaw-agnostically. Exempt from
-  # the rotation half of the export gate (position still applies).
-  EXPORT_ROTATION_EXEMPT_CLASSES: ["Can"]
+  # yaw is visually and functionally equivalent, so their "rotation error"
+  # is meaningless noise, not a real capability gap -- the control repo's
+  # controller already grasps these yaw-agnostically. Excluded from the
+  # rotation loss (so noisy/arbitrary targets don't pollute the shared
+  # rotation backbone's gradient), the reported macro rotation metric, and
+  # the rotation half of the export gate. Position still applies to them.
+  ROTATION_SYMMETRIC_CLASSES: ["Can"]

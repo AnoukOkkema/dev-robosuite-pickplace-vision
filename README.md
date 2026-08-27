@@ -118,7 +118,8 @@ API_KEY=your-roboflow-api-key
 | `POSE.DROPOUT` | Dropout probability in the class processor and rotation head of `PoseEstimator`. |
 | `POSE.ROTATION_LOSS_WEIGHT` | Weight of the rotation loss relative to the xyz loss in the combined training loss. |
 | `POSE.EARLY_STOPPING_PATIENCE` | Epochs to wait for val_loss to improve before stopping early. `0`/`null` disables it (always runs the full `POSE.EPOCHS`). |
-| `POSE.EXPORT_POSITION_THRESHOLD_CM` / `EXPORT_ROTATION_THRESHOLD_DEG` | Maximum mean absolute xyz error (cm) and mean rotation error (degrees) — **every class** must meet **both** to export to ONNX. |
+| `POSE.EXPORT_POSITION_THRESHOLD_CM` / `EXPORT_ROTATION_THRESHOLD_DEG` | Maximum mean absolute xyz error (cm) and mean rotation error (degrees) — **every class** must meet **both** to export to ONNX (rotation is skipped for classes in `ROTATION_SYMMETRIC_CLASSES`). |
+| `POSE.ROTATION_SYMMETRIC_CLASSES` | Classes with full rotational symmetry about their vertical axis (default: `["Can"]`) — a cylindrical can looks and grasps the same at any yaw, so its rotation target is meaningless noise, not a real label. Excluded from the rotation loss (a shared backbone across all classes, so noisy targets would otherwise degrade every class's rotation prediction, not just this one), the reported macro rotation metric, and the rotation half of the export gate. Position is unaffected and still fully scored. |
 
 Each step is independently skipped when its flag is `false`. If a later step
 needs the output of a skipped one (e.g. training without a downloaded
@@ -256,7 +257,11 @@ visually indistinguishable rotations aren't unfairly penalized). Both
 losses are macro-averaged per class (each class present in a batch
 contributes equally to the gradient) rather than pooled across the whole
 batch — a pooled loss lets visually easier classes dilute a harder one's
-signal, letting it quietly stay under-optimized. Shared Adam optimizer +
+signal, letting it quietly stay under-optimized. Classes listed in
+`POSE.ROTATION_SYMMETRIC_CLASSES` (e.g. `Can`) are skipped entirely by the
+rotation loss: for an object with full rotational symmetry, the "target"
+yaw is arbitrary, and forcing the model to fit it would inject noise into
+the rotation backbone shared by every class. Shared Adam optimizer +
 `ReduceLROnPlateau` scheduler. Early stops after
 `POSE.EARLY_STOPPING_PATIENCE` epochs without val_loss improvement (the
 best checkpoint so far is kept).
@@ -273,9 +278,21 @@ position variance across every class (spanning the whole table), so a few
 cm of residual on one small object can round to ~1.0 there while still
 being fatal for that object's own grasp tolerance. Exports to ONNX
 (`image, bbox, class_onehot, crop` → `xyz, rot6d`) only if **every class**
-meets **both** `POSE.EXPORT_POSITION_THRESHOLD_CM` (xyz error) **and**
+meets `POSE.EXPORT_POSITION_THRESHOLD_CM` (xyz error), **and** every class
+*not* listed in `POSE.ROTATION_SYMMETRIC_CLASSES` also meets
 `POSE.EXPORT_ROTATION_THRESHOLD_DEG` (rotation error) — a class-averaged
 pass is not enough, since it can hide one weak class behind the others.
+
+**Why `Can` is exempt from rotation everywhere (loss, metric, export
+gate):** a cylindrical can is rotationally symmetric about its vertical
+axis, so no single "correct" yaw exists for it — any yaw looks and grasps
+identically. The consuming control repo's pick-and-place controller
+already grasps `Can` yaw-agnostically for exactly this reason. Scoring or
+training against an arbitrary yaw target for `Can` doesn't just produce a
+meaningless number; since the rotation stream's backbone is shared across
+all classes, it also injects noise into the gradient that trains
+`Bread`/`Cereal`/`Milk`'s rotation prediction. `Can`'s xyz position is
+unaffected and still fully required to export.
 
 ### Visualization (`PoseVisualizer`)
 

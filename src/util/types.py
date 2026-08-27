@@ -99,9 +99,11 @@ class PoseConfig:
     # met, per class -- a good class-averaged score is not enough.
     export_rotation_threshold_deg: float
     # Classes with full rotational symmetry about their vertical axis (e.g.
-    # a cylindrical can): any yaw is equally valid, so their rotation error
-    # is exempt from the export gate -- position still applies.
-    export_rotation_exempt_classes: List[str] = field(default_factory=list)
+    # a cylindrical can): any yaw is equally valid, so their rotation
+    # target is meaningless noise. Excluded from the rotation loss, the
+    # reported macro rotation metric, and the rotation half of the export
+    # gate -- position still applies to them.
+    rotation_symmetric_classes: List[str] = field(default_factory=list)
 
 
 @dataclass

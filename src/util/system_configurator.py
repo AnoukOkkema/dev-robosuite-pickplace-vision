@@ -104,8 +104,8 @@ class ConfigAssembler:
                     rotation_loss_weight=raw["POSE"]["ROTATION_LOSS_WEIGHT"],
                     export_position_threshold_cm=raw["POSE"]["EXPORT_POSITION_THRESHOLD_CM"],
                     export_rotation_threshold_deg=raw["POSE"]["EXPORT_ROTATION_THRESHOLD_DEG"],
-                    export_rotation_exempt_classes=raw["POSE"].get(
-                        "EXPORT_ROTATION_EXEMPT_CLASSES", []
+                    rotation_symmetric_classes=raw["POSE"].get(
+                        "ROTATION_SYMMETRIC_CLASSES", []
                     ),
                 ),
             )
