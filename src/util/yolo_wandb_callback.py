@@ -40,6 +40,10 @@ class YOLOWandBCallback:
 
         self.processed_plots = {}
 
+    # ------------------------------------------------------------------
+    # Setup
+    # ------------------------------------------------------------------
+
     @classmethod
     def setup(
         cls,
@@ -82,6 +86,10 @@ class YOLOWandBCallback:
         trainer.model.add_callback("on_train_end", callback.on_train_end)
 
         return callback
+
+    # ------------------------------------------------------------------
+    # Plot and curve logging helpers
+    # ------------------------------------------------------------------
 
     def _log_plots(self, plots: dict, step: int, prefix: str) -> None:
         """
@@ -177,6 +185,10 @@ class YOLOWandBCallback:
                 step=step,
             )
 
+    # ------------------------------------------------------------------
+    # Ultralytics training callbacks
+    # ------------------------------------------------------------------
+
     def on_train_epoch_end(self, trainer) -> None:
         """
         Logs training data for one epoch: the training losses, the
@@ -270,6 +282,10 @@ class YOLOWandBCallback:
         wandb.log_artifact(artifact)
 
         self.logger.info("Logged best model artifact.")
+
+    # ------------------------------------------------------------------
+    # Test results
+    # ------------------------------------------------------------------
 
     def log_test_results(self, metrics: dict, save_dir: str) -> None:
         """

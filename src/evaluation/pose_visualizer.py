@@ -81,6 +81,10 @@ class PoseVisualizer:
 
         self.logger.info("PoseVisualizer initialized.")
 
+    # ------------------------------------------------------------------
+    # Environment setup
+    # ------------------------------------------------------------------
+
     def _init_env(self) -> MujocoEnv:
         """Builds the PickPlace environment (same setup as PoseDatasetGenerator)."""
 
@@ -117,6 +121,10 @@ class PoseVisualizer:
         fovy = self.env.sim.model.cam_fovy[cam_id]
 
         return cam_xpos, cam_xmat, fovy
+
+    # ------------------------------------------------------------------
+    # Projection and drawing
+    # ------------------------------------------------------------------
 
     def _project(self, xyz_cam: np.ndarray) -> Optional[Tuple[float, float]]:
         """Pinhole-projects a camera-frame point to a pixel in the
@@ -180,6 +188,10 @@ class PoseVisualizer:
                 cv2.LINE_AA,
             )
 
+    # ------------------------------------------------------------------
+    # Detection helpers
+    # ------------------------------------------------------------------
+
     @staticmethod
     def _dedupe_highest_confidence(detections: List[Detection]) -> List[Detection]:
         """Keeps only the highest-confidence detection per class.
@@ -208,6 +220,10 @@ class PoseVisualizer:
         rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
         chw = np.transpose(rgb, (2, 0, 1))
         return torch.from_numpy(chw).unsqueeze(0)
+
+    # ------------------------------------------------------------------
+    # Capture
+    # ------------------------------------------------------------------
 
     def _capture_single(
         self, model: Optional[PoseEstimator] = None

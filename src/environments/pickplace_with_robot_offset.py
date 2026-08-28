@@ -12,9 +12,6 @@ class PickPlaceWithRobotOffset(PickPlace):
     stream sees the whole frame, including the robot arm. So if this
     offset does not match, it shows up as a systematic xyz prediction
     error, roughly the size of the mismatch.
-
-    Attributes:
-        robot_base_offset: XYZ world-frame offset applied to the Panda base.
     """
 
     def __init__(self, *args, robot_base_offset=(0.0, 0.0, 0.0), **kwargs):

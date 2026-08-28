@@ -94,6 +94,10 @@ class PoseDatasetGenerator:
             self.robot_base_offset,
         )
 
+    # ------------------------------------------------------------------
+    # Environment
+    # ------------------------------------------------------------------
+
     def _init_env(self) -> MujocoEnv:
         """
         Initializes the robosuite environment.
@@ -133,6 +137,10 @@ class PoseDatasetGenerator:
         cam_xmat = self.env.sim.data.cam_xmat[cam_id].copy().reshape(3, 3)
 
         return cam_xpos, cam_xmat
+
+    # ------------------------------------------------------------------
+    # Frame and pose helpers
+    # ------------------------------------------------------------------
 
     @staticmethod
     def capture_agentview_image(
@@ -213,6 +221,10 @@ class PoseDatasetGenerator:
 
         return None
 
+    # ------------------------------------------------------------------
+    # Capture
+    # ------------------------------------------------------------------
+
     def _sample_action(self) -> np.ndarray:
         """Samples a random action from the environment's action space."""
 
@@ -239,6 +251,10 @@ class PoseDatasetGenerator:
             batch_images.append(image)
 
         return batch_obs, batch_images
+
+    # ------------------------------------------------------------------
+    # Label matching
+    # ------------------------------------------------------------------
 
     @staticmethod
     def get_object_names(obs) -> List[str]:
@@ -323,6 +339,10 @@ class PoseDatasetGenerator:
             samples.append((detection, class_name, label))
 
         return samples
+
+    # ------------------------------------------------------------------
+    # Generation
+    # ------------------------------------------------------------------
 
     def generate(self, num_images: int, enabled: bool = True) -> pd.DataFrame:
         """

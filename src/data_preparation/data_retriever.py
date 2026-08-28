@@ -10,12 +10,6 @@ from roboflow import Roboflow
 class RoboflowDownloader:
     """
     Downloads datasets from Roboflow.
-
-    Attributes:
-        api_key (str): The Roboflow API key.
-        workspace_name (str): The name of the workspace.
-        project_name (str): The name of the project.
-        version_number (str): The version number of the dataset.
     """
 
     def __init__(

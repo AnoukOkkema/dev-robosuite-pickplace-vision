@@ -118,6 +118,10 @@ class PoseTrainer:
             self.device,
         )
 
+    # ------------------------------------------------------------------
+    # Metrics
+    # ------------------------------------------------------------------
+
     def _r2_score(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
         """R^2 score, computed over all elements (flattened), as 1 - SS_res / SS_tot."""
 
@@ -209,6 +213,10 @@ class PoseTrainer:
 
         return per_class
 
+    # ------------------------------------------------------------------
+    # Rotation geometry
+    # ------------------------------------------------------------------
+
     def _per_sample_angle_rad(
         self, rot_pred: torch.Tensor, rot_target: torch.Tensor, eps: float = 1e-6
     ) -> torch.Tensor:
@@ -282,6 +290,10 @@ class PoseTrainer:
             .mean()
             .item()
         )
+
+    # ------------------------------------------------------------------
+    # Training loop
+    # ------------------------------------------------------------------
 
     def _run_epoch(self, loader: DataLoader, is_training: bool) -> dict:
         """

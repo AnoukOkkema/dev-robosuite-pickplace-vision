@@ -94,6 +94,10 @@ class PoseEvaluator:
             self.checkpoint_path,
         )
 
+    # ------------------------------------------------------------------
+    # Model loading
+    # ------------------------------------------------------------------
+
     def _load_model(self) -> PoseEstimator:
         """Loads the PoseEstimator checkpoint in eval mode on `self.device`."""
 
@@ -110,6 +114,10 @@ class PoseEvaluator:
         model.eval()
 
         return model
+
+    # ------------------------------------------------------------------
+    # Metrics
+    # ------------------------------------------------------------------
 
     def _r2_score(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
         """R^2 score, computed over all elements (flattened): 1 - SS_res / SS_tot."""
@@ -182,6 +190,10 @@ class PoseEvaluator:
         )
 
         return torch.rad2deg(candidate_angles.min(dim=0).values)
+
+    # ------------------------------------------------------------------
+    # Evaluation and export
+    # ------------------------------------------------------------------
 
     def _run_test_set(
         self, model: PoseEstimator, test_loader: DataLoader

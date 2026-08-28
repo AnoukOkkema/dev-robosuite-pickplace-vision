@@ -70,6 +70,10 @@ class DatasetGenerator:
 
         self.env = None
 
+    # ------------------------------------------------------------------
+    # Environment
+    # ------------------------------------------------------------------
+
     def _init_env(self) -> MujocoEnv:
         """
         Initializes the robosuite environment.
@@ -128,6 +132,10 @@ class DatasetGenerator:
 
         return np.random.uniform(low, high)
 
+    # ------------------------------------------------------------------
+    # Image processing
+    # ------------------------------------------------------------------
+
     def _process_image(self, obs: dict) -> np.ndarray:
         """
         Processes the observation image.
@@ -185,6 +193,10 @@ class DatasetGenerator:
         last_index = int(last_image.replace("frame_", "").replace(".png", ""))
 
         return last_index + 1
+
+    # ------------------------------------------------------------------
+    # Generation
+    # ------------------------------------------------------------------
 
     def generate(self, enabled: bool = True) -> None:
         """
