@@ -9,26 +9,29 @@ from src.util.types import SystemConfig
 
 class PoseWandBCallback:
     """
-    Weights & Biases callback shared by PositionTrainer/OrientationTrainer
-    and PositionEvaluator/OrientationEvaluator.
+    Weights & Biases callback shared by PoseTrainer and PoseEvaluator (the
+    same PoseEstimator model, covering both its position and rotation
+    streams).
 
-    Unlike YOLOWandBCallback (which hooks into Ultralytics' callback
-    system), these trainers run a plain PyTorch loop, so this callback is
-    invoked directly:
-    - log_model_info() once, at the start of training ("Model/...")
-    - log_epoch() after each training epoch ("train/...", "val/...") --
-      logs whatever metrics the trainer computed (xyz_r2 for position,
+    YOLOWandBCallback hooks into Ultralytics' own callback system. These
+    trainers do not use that system: they run a plain PyTorch loop instead,
+    so this callback is called directly, in this order:
+    - log_model_info(), once, at the start of training ("Model/...").
+    - log_epoch(), after each training epoch ("train/...", "val/...").
+      It logs whatever metrics the trainer computed (xyz_r2 for position,
       rot_mean_angle_error_deg for orientation), so this one callback works
       for both models.
-    - log_scene_media("train", labels_image, ...) each epoch -- ground-truth
-      poses on a live agentview scene ("media-train/labels")
-    - log_scene_media("val", labels_image, pred_image, ...) each epoch --
-      ground-truth + predicted poses ("media-val/labels", "media-val/pred")
-    - log_test_results() after the held-out test evaluation ("test/...")
-    - log_scene_media("test", ...) once, same as val ("media-test/...")
+    - log_scene_media("train", labels_image, ...), each epoch. Logs
+      ground-truth poses drawn on a live agentview scene
+      ("media-train/labels").
+    - log_scene_media("val", labels_image, pred_image, ...), each epoch.
+      Logs ground-truth poses plus predicted poses
+      ("media-val/labels", "media-val/pred").
+    - log_test_results(), after the held-out test evaluation ("test/...").
+    - log_scene_media("test", ...), once, same as for val ("media-test/...").
 
-    System metrics (GPU/CPU/memory) are logged automatically by W&B for any
-    active run -- no extra code needed for that.
+    W&B logs system metrics (GPU, CPU, memory) automatically for any
+    active run, so no extra code is needed for that.
     """
 
     def __init__(self, logger) -> None:
@@ -47,15 +50,17 @@ class PoseWandBCallback:
         Starts a W&B run.
 
         Args:
-            project_name (str): W&B project name for this run (position or
-                orientation have their own project/run names in config.yaml).
+            project_name (str): W&B project name for this run (position
+                and orientation each have their own project/run names in
+                config.yaml).
             run_name (str): W&B run name.
-            config (SystemConfig): Full run config, logged to W&B.
+            config (SystemConfig): The full run config, logged to W&B.
             logger: Logger instance.
             enabled (bool): If False, tracking is skipped.
 
         Returns:
-            Optional[PoseWandBCallback]: The callback, or None if skipped.
+            Optional[PoseWandBCallback]: The callback, or None if tracking
+                was skipped.
         """
 
         if not enabled:
@@ -99,14 +104,14 @@ class PoseWandBCallback:
 
     def log_epoch(self, epoch: int, train_metrics: dict, val_metrics: dict) -> None:
         """
-        Logs train/val metrics for one epoch. Logs whatever keys the caller
-        computed (e.g. {"xyz_r2": ...} for position, {"rot_mean_angle_error_deg": ...}
-        for orientation), so this works for both PositionTrainer and
-        OrientationTrainer.
+        Logs train and validation metrics for one epoch. Logs whatever
+        keys the caller computed, for example {"xyz_r2": ...} for
+        position or {"rot_mean_angle_error_deg": ...} for orientation, so
+        this works for both PositionTrainer and OrientationTrainer.
 
         Args:
-            epoch (int): 1-indexed epoch number.
-            train_metrics (dict): Metric name -> value.
+            epoch (int): The epoch number, starting at 1.
+            train_metrics (dict): Maps metric name to value.
             val_metrics (dict): Same shape as train_metrics.
 
         Returns:
@@ -127,19 +132,22 @@ class PoseWandBCallback:
     ) -> None:
         """
         Logs a gallery of full agentview scenes with ground-truth poses
-        drawn ("media-{prefix}/labels"), and optionally the same scenes with
-        predicted poses drawn ("media-{prefix}/pred"). Multiple samples
-        (rather than one) so a single hard/mislabeled frame doesn't look
-        like a systematic model failure.
+        drawn on them ("media-{prefix}/labels"). Optionally also logs the
+        same scenes with predicted poses drawn on them
+        ("media-{prefix}/pred"). Logging several samples, instead of just
+        one, means a single hard or mislabeled frame does not look like a
+        systematic model failure.
 
         Args:
-            prefix (str): "train", "val" or "test".
+            prefix (str): "train", "val", or "test".
             labels_images (List[np.ndarray]): (H, W, 3) BGR scenes with
-                ground-truth poses overlaid.
-            pred_images (Optional[List[np.ndarray]]): Same scenes with
-                predicted poses overlaid, or None/empty to skip.
-            step (Optional[int]): Step to log at (e.g. epoch). Omit for a
-                one-off log (e.g. test set).
+                the ground-truth poses drawn on them.
+            pred_images (Optional[List[np.ndarray]]): The same scenes
+                with the predicted poses drawn on them. Pass None or an
+                empty list to skip this.
+            step (Optional[int]): The step to log at, e.g. the epoch
+                number. Leave this out for a one-off log, such as the
+                test set.
 
         Returns:
             None
@@ -157,10 +165,10 @@ class PoseWandBCallback:
 
     def log_test_results(self, metrics: dict) -> None:
         """
-        Logs held-out test set metrics.
+        Logs metrics for the held-out test set.
 
         Args:
-            metrics (dict): Metric name -> value.
+            metrics (dict): Maps metric name to value.
 
         Returns:
             None

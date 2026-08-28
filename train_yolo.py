@@ -1,7 +1,8 @@
 from src.util.logging_configurator import LoggingConfigurator
 
-# Must run before robosuite is imported (below, transitively via
-# DatasetGenerator) -- robosuite emits its startup warnings at import time.
+# This must run before robosuite is imported. Robosuite gets imported below,
+# indirectly through DatasetGenerator, and it prints its startup warnings as
+# soon as it is imported.
 LoggingConfigurator.suppress_robosuite_warnings()
 
 from dataclasses import asdict
@@ -74,8 +75,8 @@ def main() -> None:
 
     if not data_yaml_path:
         logger.warning(
-            "No data.yaml resolved (dataset download was skipped or failed) -- "
-            "training/evaluation will fail if they are enabled."
+            "No data.yaml resolved (dataset download was skipped or failed). "
+            "Training/evaluation will fail if they are enabled."
         )
 
     # ===== TRAINER =====

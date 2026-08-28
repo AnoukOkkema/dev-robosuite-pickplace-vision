@@ -32,11 +32,12 @@ class PoseDatasetGenerator:
     - retrieves the camera-frame ground-truth pose of all objects from obs
       (via world_to_camera_frame);
     - runs the YOLO ONNX model on the agentview frame;
-    - requires exactly one detection per class before using the frame --
-      incomplete/duplicate detections are skipped;
+    - requires exactly one detection per class before using the frame.
+      Incomplete or duplicate detections are skipped;
     - collects a PoseSample for each matched object.
 
-    All samples are pickled as a single pandas DataFrame to config.save_path.
+    All samples end up in a single pandas DataFrame, which is pickled to
+    config.save_path together with the captured frames.
     """
 
     def __init__(
@@ -61,12 +62,13 @@ class PoseDatasetGenerator:
             config (Optional[PoseDatasetGeneratorConfig]): Generation
                 settings. Defaults to PoseDatasetGeneratorConfig().
             robot_base_offset (tuple): World-frame XYZ offset applied to the
-                Panda base -- must match the consuming control repo's own
-                offset. PoseEstimator's xyz stream sees the crop_region-
-                cropped agentview frame (robot arm included), so training
-                on the wrong arm position teaches the model to partly key
-                off where the arm sits, which mispredicts by roughly the
-                mismatch once deployed.
+                Panda base. This must match the offset used by the control
+                repo that will run the exported model. PoseEstimator's xyz
+                stream sees the cropped agentview frame, which includes the
+                robot arm. So if training uses the wrong arm position, the
+                model partly learns to predict position based on where the
+                arm sits, and once deployed this causes a prediction error
+                of roughly the size of the mismatch.
             logger: Logger instance. Defaults to a module logger.
 
         Returns:
@@ -135,8 +137,8 @@ class PoseDatasetGenerator:
     @staticmethod
     def capture_agentview_image(obs: dict, crop_region: Optional[CropRegion] = None) -> np.ndarray:
         """
-        Processes obs["agentview_image"] identically to DatasetGenerator: flip
-        vertically, crop, RGB -> BGR.
+        Processes obs["agentview_image"] the same way DatasetGenerator does:
+        flip it vertically, crop it, then convert it from RGB to BGR.
 
         Args:
             obs (dict): Environment observation dictionary.
@@ -186,9 +188,11 @@ class PoseDatasetGenerator:
         """
         Finds the pose-label that belongs to a YOLO class name.
 
-        robosuite object names are not necessarily identical to the Roboflow
-        class names (e.g. object name "Milk_main" vs class "Milk"), so we
-        match case-insensitively on substring instead of exact equality.
+        robosuite's object names are not always identical to the Roboflow
+        class names (for example, the object name is "Milk_main" but the
+        class is "Milk"). So instead of requiring an exact match, we match
+        case-insensitively and allow the class name to be a substring of
+        the object name.
 
         Args:
             class_name (str): YOLO class name, e.g. "Milk".
@@ -236,8 +240,9 @@ class PoseDatasetGenerator:
     @staticmethod
     def get_object_names(obs) -> List[str]:
         """
-        Finds the loose per-object pose keys in obs (e.g. "Milk"), excluding
-        relative keys like "Milk_to_robot0_eef_pos/_quat" and "robot0_eef_pos/_quat".
+        Finds the keys in obs that hold each object's own pose (e.g.
+        "Milk"). Excludes relative keys like "Milk_to_robot0_eef_pos/_quat"
+        and "robot0_eef_pos/_quat".
         """
 
         return sorted({
@@ -281,9 +286,9 @@ class PoseDatasetGenerator:
     def _match_detections(self, detections, world_labels) -> Optional[List[tuple]]:
         """
         Matches each detection to its pose-label. Returns None if not every
-        class occurs exactly once, or a detection has no match -- the frame
-        is then skipped entirely (see `generate`) rather than used with
-        partial/ambiguous labels.
+        class occurs exactly once, or if a detection has no match. In that
+        case, the whole frame is skipped (see `generate`) instead of being
+        used with partial or ambiguous labels.
 
         Args:
             detections (List[Detection]): This frame's YOLO detections.
@@ -316,14 +321,15 @@ class PoseDatasetGenerator:
     def generate(self, num_images: int, enabled: bool = True) -> pd.DataFrame:
         """
         Generates the pose dataset. Keeps sampling frames until exactly
-        `num_images` frames with a complete (one-per-class) detection have
-        been saved -- frames that get skipped (missed/duplicate/extra
-        detections) do not count towards `num_images`.
+        `num_images` frames have been saved with a complete detection (one
+        per class). Frames that get skipped, because of missed, duplicate,
+        or extra detections, do not count towards `num_images`.
 
-        Stores the full agentview frame once per frame_index (deduplicated,
-        since up to `num_classes` samples share the same frame) plus a
-        samples table referencing it by frame_index -- see PoseSample.
-        Pickled as {"frames": {frame_index: np.ndarray}, "samples": DataFrame}.
+        Stores the full agentview frame once per frame_index. This is
+        deduplicated, since up to `num_classes` samples can share the same
+        frame. It also stores a samples table that references each frame
+        by frame_index, see PoseSample. The result is pickled as
+        {"frames": {frame_index: np.ndarray}, "samples": DataFrame}.
 
         Args:
             num_images (int): Number of usable frames to collect.

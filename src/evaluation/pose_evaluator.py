@@ -10,16 +10,18 @@ from src.models.pose_estimator import PoseEstimator
 
 class PoseEvaluator:
     """
-    Handles PoseEstimator (xyz + rotation, single model) evaluation and
-    ONNX export.
+    Handles evaluation and ONNX export for the PoseEstimator model
+    (one model that predicts both xyz and rotation).
 
-    Rotation error accounts for the object's local 180-degree symmetry
-    (see `symmetry_local_rotations`): for each sample, the reported error
-    is the angle to whichever symmetry-equivalent target rotation is
-    closest to the prediction, matching what the model was actually
-    trained to minimize (PoseTrainer uses the same candidates). ONNX
-    export only happens if BOTH the xyz R^2 score and mean rotation error
-    meet their configured thresholds.
+    Rotation error takes into account the object's local 180-degree
+    symmetry (see `symmetry_local_rotations`). For each sample, the
+    reported error is the angle to whichever symmetry-equivalent target
+    rotation is closest to the prediction. This matches what the model
+    was actually trained to minimize (PoseTrainer uses the same
+    candidates). ONNX export only happens if every class's mean absolute
+    xyz error (cm) and mean rotation error both meet their configured
+    thresholds (see `evaluate`). xyz R^2 is only logged as extra context,
+    it does not gate the export.
     """
 
     def __init__(
@@ -49,14 +51,15 @@ class PoseEvaluator:
             num_classes (int): Number of object classes the model was
                 trained on.
             logger: Logger instance.
-            rotation_symmetric_classes (list): Class names with full
-                rotational symmetry about their vertical axis (e.g. a
-                cylindrical can) -- any yaw is equally valid, so their
-                rotation "error" is meaningless noise. Excluded from the
-                reported macro rotation metric and from the rotation half
-                of the export gate; position still applies to them.
+            rotation_symmetric_classes (list): Class names that look the
+                same at any rotation around their vertical axis (e.g. a
+                cylindrical can). Any yaw is equally valid for these
+                classes, so their rotation "error" is just meaningless
+                noise. They are left out of the reported macro rotation
+                metric and out of the rotation half of the export check.
+                Position is still checked normally for them.
             wandb_callback: Optional PoseWandBCallback to log test
-                metrics/media to. If None, evaluation still runs but
+                metrics and media to. If None, evaluation still runs, but
                 nothing is logged to W&B.
             pose_visualizer: Optional PoseVisualizer used to capture
                 labeled/predicted scene media for W&B, if wandb_callback
@@ -76,9 +79,9 @@ class PoseEvaluator:
         self.wandb_callback = wandb_callback
         self.pose_visualizer = pose_visualizer
 
-        # Same generic 180-degree local-symmetry candidate as PoseTrainer --
-        # reported errors should reflect what the model was actually trained
-        # to minimize.
+        # Same generic 180-degree local-symmetry candidate as PoseTrainer.
+        # Reported errors should reflect what the model was actually
+        # trained to minimize.
         self.symmetry_local_rotations = [
             torch.eye(3, device=device),
             torch.tensor(
@@ -135,8 +138,8 @@ class PoseEvaluator:
         """Boolean mask selecting samples whose class is not rotation-symmetric.
 
         Keeps rotation_symmetric_classes (e.g. Can) out of the pooled
-        rot_mean_angle_error_deg reference metric -- otherwise their
-        meaningless rotation "error" still inflates/distorts that number.
+        rot_mean_angle_error_deg reference metric. Otherwise their
+        meaningless rotation "error" would still distort that number.
         """
 
         symmetric_indices = [
@@ -153,10 +156,10 @@ class PoseEvaluator:
 
     def _per_sample_angle_deg(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> torch.Tensor:
         """
-        Per-sample geodesic rotation error, in degrees, to the *closest*
+        Per-sample geodesic rotation error, in degrees, to the closest
         symmetry-equivalent target rotation (see symmetry_local_rotations).
-        Returns a (N,) tensor -- callers reduce with .mean() (overall) or
-        a boolean mask + .mean() (per class).
+        Returns a (N,) tensor. Callers reduce it with .mean() (overall) or
+        with a boolean mask plus .mean() (per class).
         """
 
         candidate_angles = torch.stack(
@@ -171,7 +174,7 @@ class PoseEvaluator:
 
     def _run_test_set(self, model: PoseEstimator, test_loader: DataLoader) -> Dict[str, Any]:
         """
-        Runs inference over the full test set and computes overall +
+        Runs inference over the full test set and computes overall and
         per-class metrics (xyz R^2, mean rotation angle error).
 
         Args:
@@ -184,9 +187,9 @@ class PoseEvaluator:
                 "per_class"}`, where `per_class` maps each class name to its
                 own `{"xyz_r2", "xyz_mae_cm", "rot_mean_angle_error_deg",
                 "num_samples"}`. The `_macro` scores average the per-class
-                scores with equal weight per class -- the metrics that
-                actually gate ONNX export (see `evaluate`), since a pooled
-                score can hide one weak class behind the others.
+                scores with equal weight per class. These are the scores
+                that actually gate ONNX export (see `evaluate`), because a
+                pooled score can hide one weak class behind the others.
         """
 
         all_xyz_pred, all_xyz_target = [], []
@@ -224,9 +227,9 @@ class PoseEvaluator:
 
         metrics = {
             "xyz_r2": self._r2_score(xyz_pred_all, xyz_target_all),
-            # Excludes rotation_symmetric_classes (e.g. Can) -- otherwise
-            # their meaningless rotation "error" still inflates/distorts
-            # this pooled reference number.
+            # Excludes rotation_symmetric_classes (e.g. Can). Otherwise
+            # their meaningless rotation "error" would still distort this
+            # pooled reference number.
             "rot_mean_angle_error_deg": per_sample_error_deg[rotation_scored_mask].mean().item(),
         }
 
@@ -245,11 +248,11 @@ class PoseEvaluator:
                 "num_samples": int(mask.sum().item()),
             }
 
-        # Macro-average (equal weight per class) instead of a pooled mean:
-        # gates should reflect the worst class, not be washed out by easier
-        # ones (see xyz_r2 docstring). xyz still applies to every class;
-        # rotation only to classes where it's meaningful (see
-        # rotation_symmetric_classes).
+        # Macro-average (equal weight per class) instead of a pooled mean.
+        # The gates should reflect the worst class, not be smoothed over
+        # by easier ones (see the xyz_r2 docstring). xyz still applies to
+        # every class. Rotation only applies to classes where it's
+        # meaningful (see rotation_symmetric_classes).
         rot_scored_classes = {
             name: c for name, c in per_class.items() if name not in self.rotation_symmetric_classes
         }
@@ -317,11 +320,12 @@ class PoseEvaluator:
     ) -> Optional[Dict[str, Any]]:
         """
         Evaluates the PoseEstimator model on a held-out test set, and
-        exports it to ONNX only if EVERY class's mean absolute xyz error
-        (cm) meets its threshold, AND every class *not* in
-        self.rotation_symmetric_classes also meets the rotation threshold --
-        a class-averaged score is not enough, since it can hide one weak
-        class behind the others (see xyz_r2's docstring).
+        exports it to ONNX only if every single class's mean absolute
+        xyz error (cm) meets its threshold, and every class that is not
+        in self.rotation_symmetric_classes also meets the rotation
+        threshold. A class-averaged score is not enough here, since it
+        can hide one weak class behind the others (see the xyz_r2
+        docstring).
 
         Args:
             test_loader (DataLoader): Test set loader.
@@ -334,7 +338,7 @@ class PoseEvaluator:
             onnx_export_path (str): Path to write the ONNX export to.
 
         Returns:
-            Optional[Dict[str, Any]]: Evaluation metrics + onnx_path,
+            Optional[Dict[str, Any]]: Evaluation metrics plus onnx_path,
                 or None if evaluation was skipped.
         """
 
@@ -358,8 +362,8 @@ class PoseEvaluator:
 
         for class_name, class_metrics in metrics["per_class"].items():
             # Rotation is meaningless for rotation-symmetric classes (see
-            # rotation_symmetric_classes) -- printing a real-looking number
-            # for it just invites mistaking noise for a quality problem.
+            # rotation_symmetric_classes). Printing a real-looking number
+            # for it would just invite mistaking noise for a real problem.
             rotation_display = (
                 "n/a (rotation-symmetric)"
                 if class_name in self.rotation_symmetric_classes
@@ -376,10 +380,11 @@ class PoseEvaluator:
             )
 
         if self.wandb_callback is not None:
-            # Combine overall + per-class metrics into a single log_test_results()
-            # call: log_test_results() doesn't pass a wandb step, so multiple
-            # separate calls would each land on their own auto-incremented
-            # step instead of together as one "test evaluation" data point.
+            # Combine overall and per-class metrics into a single
+            # log_test_results() call. log_test_results() doesn't pass a
+            # wandb step, so separate calls would each land on their own
+            # auto-incremented step instead of together as one "test
+            # evaluation" data point.
             wandb_metrics = {
                 key: value for key, value in metrics.items() if key != "per_class"
             }
@@ -389,9 +394,10 @@ class PoseEvaluator:
                     f"per_class/{class_name}/{key}": value
                     for key, value in class_metrics.items()
                     # Rotation is meaningless noise for rotation-symmetric
-                    # classes (see rotation_symmetric_classes) -- kept out
-                    # of W&B too, matching the text log's "n/a" treatment,
-                    # so it can't show up as a false outlier on a chart.
+                    # classes (see rotation_symmetric_classes). It's kept
+                    # out of W&B too, matching the text log's "n/a"
+                    # treatment, so it can't show up as a false outlier on
+                    # a chart.
                     if not (
                         key == "rot_mean_angle_error_deg"
                         and class_name in self.rotation_symmetric_classes

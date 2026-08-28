@@ -8,9 +8,11 @@ from src.data_preparation.pose_dataset import PoseDataset
 
 class PoseDataLoader:
     """
-    Builds train/val/test DataLoaders from a pose_dataset.pkl, splitting by
-    whole captured frame (not by individual sample) so held-out sets are
-    genuinely unseen scenes -- see `_split`.
+    Builds train/val/test DataLoaders from a pose_dataset.pkl.
+
+    The data is split by whole captured frame, not by individual sample, so
+    that the held-out sets are genuinely unseen scenes. See `_split` for
+    details.
     """
 
     def __init__(
@@ -67,17 +69,22 @@ class PoseDataLoader:
 
     def _split(self, seed: int = 42):
         """
-        Splits by frame_index, not by raw sample index -- each captured
-        frame produces one sample per visible object (e.g. 4: Bread, Can,
-        Cereal, Milk), all sharing the exact same full-frame image the xyz
-        head is conditioned on. A plain per-sample random_split lets
-        different objects from the SAME frame land in different splits, so
-        the model can partially memorize a frame's background/robot-pose
-        during training and then "predict" a held-out object in that same
-        already-seen frame during validation -- inflating val/test metrics
-        without the model actually generalizing to unseen scenes. Splitting
-        by whole frames keeps every sample from a given frame on the same
-        side of the split, so val/test are genuinely unseen scenes.
+        Splits by frame_index, not by raw sample index. Each captured frame
+        produces one sample per visible object (for example 4 samples:
+        Bread, Can, Cereal, Milk), and all of them share the exact same
+        full-frame image that the xyz head is conditioned on.
+
+        A plain per-sample random_split would let different objects from
+        the SAME frame land in different splits. That would let the model
+        partly memorize a frame's background or robot pose during
+        training, and then "predict" a held-out object in that same,
+        already-seen frame during validation. This would inflate the
+        val/test metrics without the model actually generalizing to unseen
+        scenes.
+
+        Splitting by whole frames keeps every sample from a given frame on
+        the same side of the split, so val/test are genuinely unseen
+        scenes.
 
         Args:
             seed (int): Seed for shuffling frame indices before splitting,

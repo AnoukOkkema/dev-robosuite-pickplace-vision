@@ -8,31 +8,38 @@ from torch.utils.data import Dataset
 class PoseDataset(Dataset):
     """
     Wraps a pose_dataset.pkl (produced by PoseDatasetGenerator) as a torch
-    Dataset. Each item is an (image, bbox, class_onehot, crop, xyz, rot6d)
-    tuple:
-    - image: resized/normalized RGB tensor of the *full* agentview frame
-      (3, image_size, image_size) -- gives spatial/perspective context for
-      xyz. A tight object crop alone carries no scale/position information
-      to regress absolute xyz from.
-    - bbox: the object's bbox in the frame, normalized to [0, 1] by the
-      frame's width/height, plus derived area and center (7,) -- tells the
-      model which object in the frame to predict the pose for. width/height
-      are left out: PoseEstimator's heads sit behind a hidden layer now, so
-      linear combinations of x1..y2 add nothing the network can't already
-      compute itself. area (non-linear, a depth cue -- bigger in frame =
-      closer to camera) and center (directly tied to lateral x/y via the
-      camera projection) are kept as explicit, physically-grounded hints.
-    - class_onehot: one-hot class vector (num_classes,) -- an explicit
-      class signal (canonical object sizes/shapes differ, which helps
-      depth/xyz).
-    - crop: resized/normalized RGB tensor of the *tight object crop*
-      (3, rotation_image_size, rotation_image_size) -- rotation depends on
-      fine visual detail (which face/edges/orientation is visible), which
-      is largely lost once the object is a small part of the downscaled
-      full frame. Used only for the rotation head.
+    Dataset. Each item is a tuple: (image, bbox, class_onehot, crop, xyz,
+    rot6d).
+
+    - image: a resized and normalized RGB tensor of the *full* agentview
+      frame (3, image_size, image_size). This gives the model spatial and
+      perspective context for predicting xyz. A tight crop of just the
+      object has no scale or position information on its own, so it can't
+      be used to work out the object's absolute xyz position.
+    - bbox: the object's bounding box in the frame, normalized to [0, 1] by
+      the frame's width and height, plus the derived area and center (7
+      values in total). This tells the model which object in the frame to
+      predict the pose for. Width and height are left out on purpose:
+      PoseEstimator's heads now sit behind a hidden layer, so a linear
+      combination of x1..y2 adds nothing the network can't already work
+      out itself. Area and center are kept because they carry useful
+      signal on their own: area is a non-linear depth cue (a bigger box in
+      the frame means the object is closer to the camera), and center is
+      directly tied to the object's lateral x/y position through the
+      camera projection.
+    - class_onehot: a one-hot class vector (num_classes,). This gives the
+      model an explicit class signal, since different object classes have
+      different canonical sizes and shapes, which helps with depth/xyz.
+    - crop: a resized and normalized RGB tensor of the *tight object crop*
+      (3, rotation_image_size, rotation_image_size). Rotation depends on
+      fine visual detail, such as which face or edge is facing the camera.
+      That detail is mostly lost once the object is only a small part of
+      the downscaled full frame. This crop is used only for the rotation
+      head.
     - xyz: camera-frame position (3,)
-    - rot6d: first two columns of the camera-frame rotation matrix,
-      flattened (6,) -- the 6D rotation representation (Zhou et al., 2019)
+    - rot6d: the first two columns of the camera-frame rotation matrix,
+      flattened (6,). This is the 6D rotation representation from Zhou et
+      al., 2019.
     """
 
     def __init__(self, pickle_path: str, image_size: int = 224, rotation_image_size: int = 128) -> None:
@@ -84,10 +91,13 @@ class PoseDataset(Dataset):
         xyz = torch.from_numpy(np.asarray(row["xyz_cam"], dtype=np.float32))
 
         rot_cam = np.asarray(row["rot_cam"], dtype=np.float32)
-        # .T before reshape: rot_cam[:, :2] is (3, 2) and .reshape(-1) alone flattens
-        # row-major (interleaving both columns' entries per row), NOT the column0-then
-        # -column1 layout rot6d_to_matrix() expects. Transposing first gives (2, 3) --
-        # row0 = full column0, row1 = full column1 -- so the flatten is [col0, col1].
+        # .T before reshape: rot_cam[:, :2] has shape (3, 2). Calling
+        # .reshape(-1) on it directly would flatten it row by row, mixing
+        # entries from both columns together. That is not the order
+        # rot6d_to_matrix() expects, which is all of column 0 first, then
+        # all of column 1. Transposing first gives shape (2, 3), where row
+        # 0 is column 0 and row 1 is column 1, so flattening that gives
+        # [col0, col1] in the correct order.
         rot6d = torch.from_numpy(rot_cam[:, :2].T.reshape(-1))
 
         return image, bbox_norm, class_onehot, crop, xyz, rot6d

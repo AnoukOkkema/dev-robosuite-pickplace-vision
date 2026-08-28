@@ -15,18 +15,19 @@ class LoggingConfigurator:
     @classmethod
     def setup(cls, log_filename: str = "main.log") -> logging.Logger:
         """
-        Configures the logging system using the YAML configuration file.
+        Sets up logging using the YAML configuration file.
 
-        Only takes effect on the first call per process - later calls just
-        return the already-configured logger.
+        This only runs on the first call in a process. Later calls just
+        return the logger that was already configured.
 
         Args:
             log_filename (str): Name of the log file inside logs/, e.g.
-                "train_yolo.log" -- lets each entrypoint script write to
-                its own file instead of sharing logs/main.log.
+                "train_yolo.log". This lets each entrypoint script write
+                to its own file, instead of every script sharing
+                logs/main.log.
 
         Returns:
-            logging.Logger: Configured logger instance.
+            logging.Logger: The configured logger instance.
 
         Example:
             logger = LoggingConfigurator.setup("train_yolo.log")
@@ -68,17 +69,19 @@ class LoggingConfigurator:
     @staticmethod
     def suppress_robosuite_warnings() -> None:
         """
-        Silences robosuite's own startup warnings (missing private macro
-        file, optional mink-based whole-body IK controller) by writing a
-        private macro file that raises its console logging level to
-        "ERROR" -- the same fix robosuite's own `scripts/setup_macros.py`
-        performs manually.
+        Silences robosuite's own startup warnings (about a missing private
+        macro file, and about the optional mink-based whole-body IK
+        controller). It does this by writing a private macro file that
+        raises robosuite's console logging level to "ERROR". This is the
+        same fix that robosuite's own `scripts/setup_macros.py` applies
+        manually.
 
-        Must be called before robosuite is imported anywhere (directly or
-        transitively), since robosuite emits those warnings as a side
-        effect of the import itself -- so unlike `setup()`, this cannot be
-        folded into that method and has to run at the top of each
-        entrypoint, ahead of any robosuite-importing modules.
+        This must be called before robosuite is imported anywhere in the
+        code, whether directly or indirectly. Robosuite prints these
+        warnings as soon as it is imported, as a side effect of the import
+        itself. So, unlike `setup()`, this method cannot simply be folded
+        into that method. It has to run at the very top of each entrypoint
+        script, before any module that imports robosuite.
 
         Returns:
             None

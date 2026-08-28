@@ -1,8 +1,8 @@
 from src.util.logging_configurator import LoggingConfigurator
 
-# Must run before robosuite is imported (below, transitively via
-# PoseDatasetGenerator/PoseVisualizer) -- robosuite emits its startup
-# warnings at import time.
+# This must run before robosuite is imported. Robosuite gets imported below,
+# indirectly through PoseDatasetGenerator and PoseVisualizer, and it prints
+# its startup warnings as soon as it is imported.
 LoggingConfigurator.suppress_robosuite_warnings()
 
 import wandb

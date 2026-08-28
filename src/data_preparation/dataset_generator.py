@@ -16,15 +16,15 @@ class DatasetGenerator:
     """
     Generates synthetic images using the robosuite PickPlace environment.
 
-    This class:
-    - Initializes a robosuite environment
-    - Randomly samples actions
+    This class does the following:
+    - Starts a robosuite environment
+    - Picks random actions
     - Captures images from the environment
-    - Processes and crops images
-    - Saves images to disk
+    - Processes and crops the images
+    - Saves the images to disk
 
-    Images are automatically indexed based on the latest
-    existing image in the output directory.
+    Image numbering picks up automatically from the last existing image
+    in the output directory.
     """
 
     def __init__(
@@ -40,8 +40,7 @@ class DatasetGenerator:
 
         Args:
             save_dir (str):
-                Directory where generated images
-                will be saved.
+                Directory where the generated images are saved.
 
             num_images (int):
                 Number of images to generate.

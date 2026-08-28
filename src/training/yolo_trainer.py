@@ -6,8 +6,8 @@ from ultralytics import YOLO
 
 class YOLOTrainer:
     """
-    Trains a YOLO detection model (via Ultralytics) on a labeled dataset,
-    with early stopping and plots handled by Ultralytics itself.
+    Trains a YOLO detection model, using Ultralytics, on a labeled dataset.
+    Early stopping and plots are handled by Ultralytics itself.
     """
 
     def __init__(
@@ -24,7 +24,7 @@ class YOLOTrainer:
         logger
     ) -> None:
         """
-        Initializes the YOLOTrainer and loads the base model.
+        Sets up the YOLOTrainer and loads the base model.
 
         Args:
             model_name (str): Base checkpoint to start training from
@@ -37,7 +37,7 @@ class YOLOTrainer:
                 stops training early.
             device (str): Torch device to train on.
             project_name (str): Ultralytics project (output) directory name.
-            run_name (str): Run name; the actual run folder becomes
+            run_name (str): Run name. The actual run folder becomes
                 "{run_name}-train" (see `train`).
             logger: Logger instance.
 
@@ -89,8 +89,8 @@ class YOLOTrainer:
             enabled (bool): If False, training is skipped.
 
         Returns:
-            Optional[Path]: Training output directory,
-                or None if training was skipped.
+            Optional[Path]: Training output directory, or None if training
+                was skipped.
         """
 
         if not enabled:

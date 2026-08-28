@@ -11,8 +11,10 @@ from src.models.pose_estimator import PoseEstimator
 
 class PoseTrainer:
     """
-    Handles PoseEstimator (xyz + rotation) training: joint xyz MSE loss +
-    weighted symmetry-aware geodesic rotation loss, shared optimizer/scheduler.
+    Trains the PoseEstimator model (xyz position + rotation). Both streams
+    train together with one combined loss: xyz MSE loss plus a weighted,
+    symmetry-aware rotation loss. They share one optimizer and one learning
+    rate scheduler.
     """
 
     def __init__(
@@ -32,7 +34,8 @@ class PoseTrainer:
         pose_visualizer=None,
     ) -> None:
         """
-        Initializes the PoseTrainer, optimizer and LR scheduler.
+        Sets up the PoseTrainer, its optimizer, and its learning rate
+        scheduler.
 
         Args:
             model (PoseEstimator): Model to train.
@@ -47,21 +50,23 @@ class PoseTrainer:
                 relative to the xyz loss in the combined training loss.
             logger: Logger instance.
             early_stopping_patience (Optional[int]): Epochs to wait for
-                val_loss to improve before stopping early. None/0 disables
-                it (always runs the full `epochs`).
-            rotation_symmetric_classes (list): Class names with full
-                rotational symmetry about their vertical axis (e.g. a
-                cylindrical can) -- any yaw is equally valid, so their
-                rotation target is meaningless noise. Excluded from the
-                rotation loss (shared across all classes' rotation
-                backbone, so noisy targets would otherwise pollute
-                gradients for every class) and from the reported macro
-                rotation metric. xyz position is unaffected.
-            wandb_callback: Optional PoseWandBCallback for per-epoch/model
-                logging. If None, training still runs but nothing is
-                logged to W&B.
+                val_loss to improve before stopping early. None or 0
+                disables this, so training always runs the full `epochs`.
+            rotation_symmetric_classes (list): Class names that look the
+                same at any rotation around their vertical axis (e.g. a
+                cylindrical can). Any yaw is equally valid for these
+                classes, so their rotation target is meaningless noise.
+                They are left out of the rotation loss and out of the
+                reported macro rotation metric. All classes share one
+                rotation backbone, so without this, the noisy targets from
+                these classes would pollute the gradients for every other
+                class too. Their xyz position is still trained and scored
+                normally.
+            wandb_callback: Optional PoseWandBCallback for per-epoch and
+                per-model logging. If None, training still runs, but
+                nothing is logged to W&B.
             pose_visualizer: Optional PoseVisualizer used to capture
-                labeled/predicted scene media each epoch, if
+                labeled and predicted scene images each epoch, if
                 wandb_callback is also given.
 
         Returns:
@@ -79,24 +84,25 @@ class PoseTrainer:
         self.epochs = epochs
         self.checkpoint_path = Path(checkpoint_path)
         self.rotation_loss_weight = rotation_loss_weight
-        # Epochs to wait for val_loss to improve before stopping early --
-        # None/0 disables it (always runs the full self.epochs).
+        # Epochs to wait for val_loss to improve before stopping early.
+        # None or 0 disables this, so training always runs the full self.epochs.
         self.early_stopping_patience = early_stopping_patience
         self.wandb_callback = wandb_callback
         self.pose_visualizer = pose_visualizer
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=learning_rate)
-        # Without decay, val error tends to oscillate late in training instead
-        # of settling.
+        # Without this decay, val error tends to oscillate late in training
+        # instead of settling down.
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             self.optimizer, mode="min", factor=0.5, patience=5
         )
 
-        # Generic 180-degree local-symmetry candidate, applied to all classes:
-        # without it, symmetric objects (e.g. a box that looks the same
-        # rotated 180 degrees about its own up-axis) get penalized for
-        # "wrong" rotations that are visually indistinguishable from correct
-        # ones, which pollutes the gradient and the reported error.
+        # A generic 180-degree local-symmetry candidate, applied to all
+        # classes. Many objects (e.g. a box) look almost the same when
+        # turned 180 degrees around their own vertical axis. Without this,
+        # the model would be penalized for "wrong" rotations that actually
+        # look correct, which pollutes both the gradient and the reported
+        # error.
         self.symmetry_local_rotations = [
             torch.eye(3, device=device),
             torch.tensor(
@@ -113,7 +119,7 @@ class PoseTrainer:
         )
 
     def _r2_score(self, preds: torch.Tensor, targets: torch.Tensor) -> float:
-        """R^2 score, computed over all elements (flattened): 1 - SS_res / SS_tot."""
+        """R^2 score, computed over all elements (flattened), as 1 - SS_res / SS_tot."""
 
         residual_sum_squares = torch.sum((targets - preds) ** 2)
         total_sum_squares = torch.sum((targets - targets.mean()) ** 2)
@@ -126,13 +132,14 @@ class PoseTrainer:
     def _macro_mse_by_class(
         self, pred: torch.Tensor, target: torch.Tensor, class_indices: torch.Tensor
     ) -> torch.Tensor:
-        """MSE averaged per class with equal weight (classes absent from this
-        batch are skipped), instead of one MSE pooled over the whole batch.
+        """MSE averaged per class, with each class counted equally (a class
+        that is missing from this batch is just skipped), instead of one
+        MSE pooled over the whole batch.
 
         A pooled loss lets whichever classes are visually easier dominate
-        the gradient every step; macro-averaging guarantees each class
-        that's present pulls equally, so a harder class (e.g. a small,
-        round object) can't be quietly under-optimized behind easier ones.
+        the gradient at every step. Averaging per class instead makes sure
+        each class that is present pulls equally, so a harder class (e.g. a
+        small, round object) cannot be quietly left behind by easier ones.
         """
 
         per_class_losses = []
@@ -150,11 +157,11 @@ class PoseTrainer:
     def _rotation_scored_mask(self, class_indices: torch.Tensor) -> torch.Tensor:
         """Boolean mask selecting samples whose class is not rotation-symmetric.
 
-        Used to keep rotation_symmetric_classes (e.g. Can) out of the
-        pooled rot_mean_angle_error_deg reference metric too -- otherwise
-        their meaningless rotation "error" still inflates/distorts that
-        number every epoch, even though the loss and the macro metric
-        already exclude them.
+        This keeps rotation_symmetric_classes (e.g. Can) out of the pooled
+        rot_mean_angle_error_deg reference metric too. The loss and the
+        macro metric already exclude these classes, but without this mask,
+        their meaningless rotation "error" would still distort that number
+        every epoch.
         """
 
         symmetric_indices = [
@@ -177,7 +184,7 @@ class PoseTrainer:
         rot_target: torch.Tensor,
         class_indices: torch.Tensor,
     ) -> dict:
-        """Per-class mean absolute xyz error (cm) and mean rotation error (degrees)."""
+        """Per-class mean absolute xyz error (in cm) and mean rotation error (in degrees)."""
 
         per_sample_error_deg = torch.rad2deg(self._symmetry_min_angle_rad(rot_pred, rot_target))
         per_class = {}
@@ -196,7 +203,7 @@ class PoseTrainer:
         return per_class
 
     def _per_sample_angle_rad(self, rot_pred: torch.Tensor, rot_target: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
-        """Per-sample geodesic angle (radians): arccos((trace(R_pred^T @ R_target) - 1) / 2)."""
+        """Per-sample geodesic angle (in radians), as arccos((trace(R_pred^T @ R_target) - 1) / 2)."""
 
         relative_rotation = torch.matmul(rot_pred.transpose(1, 2), rot_target)
         trace = relative_rotation.diagonal(dim1=1, dim2=2).sum(-1)
@@ -220,10 +227,10 @@ class PoseTrainer:
     def _rotation_loss(
         self, rot6d_pred: torch.Tensor, rot_cam_target: torch.Tensor, class_indices: torch.Tensor
     ) -> torch.Tensor:
-        """Symmetry-aware geodesic rotation loss (radians), macro-averaged per class
+        """Symmetry-aware geodesic rotation loss (in radians), averaged per class.
 
-        (see `_macro_mse_by_class` for why: a pooled mean lets easier
-        classes dilute a harder class's gradient signal).
+        See `_macro_mse_by_class` for why: a pooled mean would let easier
+        classes dilute a harder class's gradient signal.
         """
 
         rot_pred = PoseEstimator.rot6d_to_matrix(rot6d_pred)
@@ -248,29 +255,30 @@ class PoseTrainer:
         return torch.stack(per_class_losses).mean()
 
     def _mean_angular_error_deg(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> float:
-        """Mean symmetry-aware geodesic rotation error over the batch, in degrees."""
+        """Mean symmetry-aware geodesic rotation error over the batch (in degrees)."""
 
         return torch.rad2deg(self._symmetry_min_angle_rad(rot_pred, rot_target)).mean().item()
 
     def _run_epoch(self, loader: DataLoader, is_training: bool) -> dict:
         """
-        Runs one full pass over `loader`, updating model weights if
-        `is_training` (else a no-grad evaluation pass), and returns
-        aggregate loss/metric values for the epoch.
+        Runs one full pass over `loader`. If `is_training` is True, it
+        updates the model weights; otherwise it runs a no-grad evaluation
+        pass. Returns the aggregate loss and metric values for the epoch.
 
         Args:
             loader (DataLoader): Data to iterate over (train or val).
-            is_training (bool): If True, backprops and steps the optimizer;
-                if False, runs in eval mode with gradients disabled.
+            is_training (bool): If True, backpropagates and steps the
+                optimizer. If False, runs in eval mode with gradients
+                disabled.
 
         Returns:
             dict: `{"xyz_loss", "rot_loss", "xyz_r2", "rot_mean_angle_error_deg",
                 "xyz_mae_cm_macro", "rot_mean_angle_error_deg_macro", "per_class"}`,
-                averaged/aggregated over the whole loader. The `_macro`
-                scores (and the per-class breakdown) average with equal
-                weight per class -- see `_macro_mse_by_class` -- while
-                `xyz_r2` and the pooled `rot_mean_angle_error_deg` are kept
-                only as secondary reference metrics.
+                averaged or aggregated over the whole loader. The `_macro`
+                scores, and the per-class breakdown, weight each class
+                equally (see `_macro_mse_by_class`). `xyz_r2` and the pooled
+                `rot_mean_angle_error_deg` are kept only as secondary
+                reference metrics.
         """
 
         self.model.train(is_training)
@@ -325,8 +333,8 @@ class PoseTrainer:
         per_class = self._per_class_metrics(
             xyz_pred_all, xyz_target_all, rot_pred_all, rot_target_all, class_indices_all
         )
-        # xyz still matters for every class; rotation only for classes
-        # where it's meaningful (see rotation_symmetric_classes).
+        # xyz still matters for every class. Rotation only matters for
+        # classes where it's meaningful (see rotation_symmetric_classes).
         rot_scored_classes = {
             name: c for name, c in per_class.items() if name not in self.rotation_symmetric_classes
         }
@@ -355,8 +363,8 @@ class PoseTrainer:
             enabled (bool): If False, training is skipped.
 
         Returns:
-            Optional[Path]: Path to the best checkpoint,
-                or None if training was skipped.
+            Optional[Path]: Path to the best checkpoint, or None if
+                training was skipped.
         """
 
         if not enabled:
@@ -378,8 +386,8 @@ class PoseTrainer:
             train_metrics = self._run_epoch(self.train_loader, is_training=True)
             val_metrics = self._run_epoch(self.val_loader, is_training=False)
 
-            # Per-class breakdown (val only, logged below) isn't sent to
-            # wandb's per-epoch scalar log.
+            # The per-class breakdown (val only, logged below) is not sent
+            # to wandb's per-epoch scalar log.
             train_metrics.pop("per_class")
             val_per_class = val_metrics.pop("per_class")
 
@@ -400,8 +408,9 @@ class PoseTrainer:
 
             for class_name, class_metrics in val_per_class.items():
                 # Rotation is meaningless for rotation-symmetric classes
-                # (see rotation_symmetric_classes) -- a real-looking number
-                # for it just invites mistaking noise for a regression.
+                # (see rotation_symmetric_classes). Showing a real-looking
+                # number for it would just invite mistaking noise for a
+                # regression.
                 rotation_display = (
                     "n/a (rotation-symmetric)"
                     if class_name in self.rotation_symmetric_classes

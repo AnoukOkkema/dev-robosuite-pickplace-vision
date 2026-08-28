@@ -7,7 +7,7 @@ from pathlib import Path
 
 class RoboflowDownloader:
     """
-    A class for downloading datasets from Roboflow.
+    Downloads datasets from Roboflow.
 
     Attributes:
         api_key (str): The Roboflow API key.
@@ -34,10 +34,10 @@ class RoboflowDownloader:
             api_key (str): The Roboflow API key.
             workspace_name (str): The name of the workspace.
             project_name (str): The Roboflow project slug, used for API calls.
-            dataset_folder_name (str): The local folder name to download/read
-                the dataset into (independent of the Roboflow project slug,
-                since Roboflow's own project.name display name doesn't
-                always match what you want on disk).
+            dataset_folder_name (str): The local folder name used to save or
+                read the dataset. This can be different from the Roboflow
+                project slug, because Roboflow's own project display name
+                does not always match the folder name you want on disk.
             version_number (str): The version number of the dataset.
 
         Returns:
@@ -55,9 +55,10 @@ class RoboflowDownloader:
     @staticmethod
     def resolve_local_folder_path(data_path: str, dataset_folder_name: str, version_number) -> str:
         """
-        Builds the local dataset folder path from DATASET_FOLDER_NAME +
-        VERSION_NUMBER, matching Roboflow's download folder naming
-        ("<dataset_folder_name>-<version>") without calling the Roboflow API.
+        Builds the local dataset folder path from DATASET_FOLDER_NAME and
+        VERSION_NUMBER. This matches the folder name Roboflow itself uses
+        when it downloads a dataset ("<dataset_folder_name>-<version>"),
+        without needing to call the Roboflow API.
 
         Used when downloading is disabled but the dataset is already present
         on disk from a previous run.
@@ -118,7 +119,7 @@ class RoboflowDownloader:
             self.data_path, self.dataset_folder_name, dataset.version
         )
 
-        # Check if the project folder already exists
+        # Skip the download if this dataset already exists locally
         if not os.path.exists(project_folder_path):
 
             self.logger.info(
@@ -152,12 +153,14 @@ class RoboflowDownloader:
         with open(f"{project_folder_path}/data.yaml", "r") as file:
             data = yaml.safe_load(file)
 
-        # Update the paths with project_name
+        # Rewrite the train/val/test paths as absolute local paths.
+        # Roboflow's own paths are relative and don't match where this
+        # project actually lives on disk, so they need to be replaced.
         data["train"] = f"{project_folder_path}/train/images"
         data["val"] = f"{project_folder_path}/valid/images"
         data["test"] = f"{project_folder_path}/test/images"
 
-        # Write the updated data back to the file
+        # Save the updated data.yaml back to disk
         with open(f"{project_folder_path}/data.yaml", "w") as file:
             yaml.dump(data, file)
 

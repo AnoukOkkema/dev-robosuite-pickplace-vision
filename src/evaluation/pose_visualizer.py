@@ -19,11 +19,11 @@ from src.util.types import CropRegion, Detection, ImageSize, PoseLabel
 
 class PoseVisualizer:
     """
-    Renders live agentview scenes with predicted xyz + rotation overlaid, for
-    W&B media logging.
+    Renders live agentview scenes with the predicted xyz and rotation drawn
+    on top, for W&B media logging.
 
-    Builds its own PickPlace environment (mirrors PoseDatasetGenerator),
-    independent of the training dataset, so it can be used mid-training to
+    Builds its own PickPlace environment (mirroring PoseDatasetGenerator),
+    separate from the training dataset, so it can be used mid-training to
     check the model on fresh frames.
     """
 
@@ -56,10 +56,11 @@ class PoseVisualizer:
             rotation_image_size (int): Input resolution of the cropped
                 object image (rotation stream), for model inference.
             device (str): Torch device to run model inference on.
-            robot_base_offset (tuple): World-frame XYZ offset applied to the
-                Panda base -- must match PoseDatasetGenerator's, and the
-                consuming control repo's own offset (see
-                PickPlaceWithRobotOffset for why).
+            robot_base_offset (tuple): World-frame XYZ offset applied to
+                the Panda base. Must match the offset used by
+                PoseDatasetGenerator, and the offset used by the consuming
+                control repo itself (see PickPlaceWithRobotOffset for why
+                this matters).
             logger: Logger instance. Defaults to a module logger.
 
         Returns:
@@ -170,10 +171,10 @@ class PoseVisualizer:
         """Keeps only the highest-confidence detection per class.
 
         Unlike PoseDatasetGenerator (which rejects the whole frame on any
-        duplicate/count mismatch, since training data must be exact), this
-        is just a debug visualization -- a best-effort per-class pick keeps
-        the wandb sanity images readable instead of drawing every
-        overlapping box+axes NMS left standing on one object.
+        duplicate or count mismatch, since training data must be exact),
+        this is just a debug visualization. A best-effort per-class pick
+        keeps the wandb sanity images readable, instead of drawing every
+        overlapping box and axes that NMS left standing on one object.
         """
 
         best_by_class = {}
@@ -197,16 +198,16 @@ class PoseVisualizer:
         self, model: Optional[PoseEstimator] = None
     ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
         """
-        Resets the env (randomizes object placement -- PickPlace only
-        re-randomizes on reset(), not step()) and renders:
+        Resets the env (this randomizes object placement, since PickPlace
+        only re-randomizes on reset(), not on step()) and renders:
         - labels_image: agentview scene with ground-truth object poses drawn.
-        - pred_image: same scene with the model's predicted xyz + rotation
-          drawn (None if no model given).
+        - pred_image: same scene with the model's predicted xyz and
+          rotation drawn (None if no model was given).
 
-        robosuite's reset() rebuilds the whole MuJoCo model from XML, which
-        leaks native memory if called many times without the old model/sim
-        being garbage-collected -- see capture_media(), which forces a gc
-        pass after each batch to keep this in check.
+        robosuite's reset() rebuilds the whole MuJoCo model from XML. This
+        leaks native memory if it's called many times without the old
+        model/sim being garbage-collected. See capture_media(), which
+        forces a gc pass after each batch to keep this in check.
 
         Returns:
             Tuple[np.ndarray, Optional[np.ndarray]]: (labels_image, pred_image).
@@ -289,11 +290,12 @@ class PoseVisualizer:
     ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
         """
         Captures `num_samples` independent live frames (each with its own
-        env.reset(), so object placement genuinely differs between samples)
-        and renders ground-truth/predicted poses for each.
+        env.reset(), so object placement genuinely differs between
+        samples) and renders ground-truth and predicted poses for each.
 
-        Forces a gc pass after the batch -- see PoseVisualizer.capture_media
-        for why this is necessary (repeated env.reset() memory growth).
+        Forces a gc pass after the batch. See `_capture_single` for why
+        this is necessary (repeated env.reset() calls cause memory
+        growth).
 
         Args:
             model (Optional[PoseEstimator]): If given, also renders predictions.

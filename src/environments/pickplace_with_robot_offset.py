@@ -1,10 +1,3 @@
-"""Robosuite PickPlace task with a configurable Panda-base world offset.
-
-The standard Robosuite layout positions the Panda at a fixed reference point.
-This subclass keeps the task unchanged while allowing configuration to move the
-robot base to match the deployment environment (see EnvironmentConfig).
-"""
-
 import numpy as np
 from robosuite.environments.manipulation.pick_place import PickPlace
 
@@ -12,12 +5,13 @@ from robosuite.environments.manipulation.pick_place import PickPlace
 class PickPlaceWithRobotOffset(PickPlace):
     """Apply a world-frame robot offset before MuJoCo compiles the model.
 
-    This small environment subclass leaves Robosuite's PickPlace task intact
-    while making the robot position configurable, so training/evaluation
-    scenes can match the robot base position used by the consuming control
-    repo -- PoseEstimator's xyz stream sees the whole frame (robot arm
-    included), so a mismatch here otherwise shows up as a systematic xyz
-    prediction error roughly the size of the mismatch.
+    This small environment subclass leaves Robosuite's PickPlace task
+    intact, but makes the robot position configurable. This lets the
+    training and evaluation scenes match the robot base position used by
+    the consuming control repo. This matters because PoseEstimator's xyz
+    stream sees the whole frame, including the robot arm. So if this
+    offset does not match, it shows up as a systematic xyz prediction
+    error, roughly the size of the mismatch.
 
     Attributes:
         robot_base_offset: XYZ world-frame offset applied to the Panda base.

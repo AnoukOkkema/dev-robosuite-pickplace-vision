@@ -6,26 +6,30 @@ from torchvision.models import resnet18, ResNet18_Weights
 
 class PoseEstimator(nn.Module):
     """
-    Predicts camera-frame xyz position AND orientation (6D rotation
-    representation) for a detected object, given its full agentview frame,
-    bbox, class, and a tight crop.
+    Predicts an object's camera-frame xyz position and its orientation (as a
+    6D rotation) from its full agentview frame, bounding box, class, and a
+    tight crop.
 
-    Two streams, since xyz and rotation need fundamentally different visual
-    information:
-    - xyz stream: full agentview frame + bbox + class -> xyz_head. A tight
-      crop alone carries no scale/position information to regress absolute
-      xyz from, so the full frame (for spatial/perspective context) plus the
-      bbox (which object, where) are used instead.
-    - rotation stream: tight object crop, with class run through its own
-      small MLP branch (with dropout) before fusing -> rot_head. Rotation
-      depends on fine visual detail (which face/edges are visible), which is
-      largely lost once the object is a small part of the downscaled full
-      frame.
+    Position and rotation need very different visual information, so the
+    model uses two separate streams:
+    - Position stream: full agentview frame + bbox + class -> xyz_head. A
+      tight crop on its own cannot tell the model how big or how far away
+      the object really is, because any crop gets resized to a fixed size
+      before it reaches the network. The full frame gives the model the bin
+      edges and the other objects to measure against, and the bbox tells it
+      exactly which object to look at and where it is in the frame.
+    - Rotation stream: a tight crop of just the object, with its class
+      passed through a small MLP branch (with dropout) before the two are
+      combined -> rot_head. Rotation depends on fine detail, like which face
+      or edge is facing the camera. That detail is mostly lost once the
+      object is only a small part of the resized full frame, so this stream
+      instead gets a tight crop that spends all its pixels on the object.
 
-    Both streams share nothing (separate ResNet18 backbones) -- only the
-    training loop and checkpoint are shared. rot_head output is the 6D
-    rotation representation (Zhou et al., 2019); use rot6d_to_matrix() to
-    turn it into an orthonormal 3x3 rotation matrix.
+    The two streams share nothing: each has its own ResNet18 backbone. Only
+    the training loop and the checkpoint file are shared. The rot_head
+    output is a 6D rotation representation (Zhou et al., 2019). Use
+    rot6d_to_matrix() to turn it into a proper, orthonormal 3x3 rotation
+    matrix.
     """
 
     BBOX_FEATURES = 7
@@ -80,12 +84,12 @@ class PoseEstimator(nn.Module):
         Args:
             image (torch.Tensor): (B, 3, H, W) normalized RGB full agentview frames.
             bbox (torch.Tensor): (B, 7) bbox (x1, y1, x2, y2, area, cx, cy),
-                normalized to [0, 1] by the frame's width/height.
+                normalized to [0, 1] by the frame's width and height.
             class_onehot (torch.Tensor): (B, num_classes) one-hot class vector.
             crop (torch.Tensor): (B, 3, H, W) normalized RGB tight object crops.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]: (xyz, rot6d), shapes (B, 3) and (B, 6).
+            Tuple[torch.Tensor, torch.Tensor]: (xyz, rot6d), with shapes (B, 3) and (B, 6).
         """
 
         xyz_features = self.xyz_backbone(image)
@@ -102,8 +106,8 @@ class PoseEstimator(nn.Module):
     @staticmethod
     def rot6d_to_matrix(rot6d: torch.Tensor) -> torch.Tensor:
         """
-        Converts the raw 6D rotation output into an orthonormal 3x3 rotation
-        matrix via Gram-Schmidt orthogonalization.
+        Converts the raw 6D rotation output into a proper, orthonormal 3x3
+        rotation matrix, using Gram-Schmidt orthogonalization.
 
         Args:
             rot6d (torch.Tensor): (B, 6).

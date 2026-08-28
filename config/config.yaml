@@ -1,36 +1,45 @@
+# Base folder for generated frames and downloaded Roboflow datasets.
 DATA_FOLDER: "./data/"
 
-GENERATE_DATASET: false
-DOWNLOAD_DATASET: true
-TRAIN_YOLO: true
-EVAL_YOLO: true
+# Object detection pipeline (train_yolo.py). Turn each step on/off below.
+GENERATE_DATASET: false      # Step 1: create synthetic frames from robosuite.
+DOWNLOAD_DATASET: true       # Step 2: download the labeled dataset from Roboflow.
+TRAIN_YOLO: true             # Step 3: train the YOLO model.
+EVAL_YOLO: true              # Step 4: test the model, export to ONNX if it passes.
 
-GENERATE_POSE_DATASET: false
-TRAIN_POSE_ESTIMATOR: true
-EVAL_POSE_ESTIMATOR: true
+# Pose estimation pipeline (train_pose.py). Turn each step on/off below.
+GENERATE_POSE_DATASET: false # Step 1: build the pose dataset from robosuite + YOLO.
+TRAIN_POSE_ESTIMATOR: true   # Step 2: train the PoseEstimator model.
+EVAL_POSE_ESTIMATOR: true    # Step 3: test the model, export to ONNX if it passes.
 
 ENVIRONMENT:
-  # World-frame robot base offset.
+  # XYZ offset applied to the Panda robot's base position in the simulation.
+  # Must match the offset used by the robot that will run the exported model.
   ROBOT_BASE_OFFSET: [0.10, 0.10, 0.0]
 
+# Roboflow workspace/project the dataset is downloaded from (see
+# DOWNLOAD_DATASET above). The dataset is public, so any valid Roboflow API
+# key can download it, even from a different account.
 ROBOFLOW:
   WORKSPACE_NAME: "anouk-okkema"
   PROJECT_NAME: "robosuite-pickplace-object-detection-synthetic"
-  DATASET_FOLDER_NAME: "PickPlace Vision Dataset"
+  DATASET_FOLDER_NAME: "PickPlace Vision Dataset"  # local folder name the dataset is saved under
   VERSION_NUMBER: 1
   MODEL_FORMAT: "yolov8"
 
 YOLO:
-  MODEL_NAME: "yolov8n.pt"
+  MODEL_NAME: "yolov8n.pt"       # base model training starts from
   EPOCHS: 100
   IMAGE_SIZE: 640
   BATCH_SIZE: 16
-  PATIENCE: 30
-  PROJECT_NAME: "robosuite-pickplace-vision"
+  PATIENCE: 30                   # epochs to wait with no improvement before stopping early
+  PROJECT_NAME: "robosuite-pickplace-vision"   # Ultralytics run folder name
   RUN_NAME: "yolov8n-baseline-v1"
-  EXPORT_ONNX_THRESHOLD: 0.8
+  EXPORT_ONNX_THRESHOLD: 0.8     # minimum mAP50-95 score (test set) needed to export to ONNX
   EXPORT_ONNX_NAME: "yolo_detector.onnx"
 
+# Turns off Ultralytics' own experiment trackers. We log to W&B ourselves
+# instead (see YOLOWandBCallback), so these should stay false.
 ULTRALYTICS:
   wandb: false
   tensorboard: false
@@ -41,30 +50,31 @@ ULTRALYTICS:
 POSE:
   PROJECT_NAME: "robosuite-pickplace-pose"
   RUN_NAME: "pose-estimator-baseline-v1"
-  POSE_DATASET_PATH: "./data/pose_dataset.pkl"
+  POSE_DATASET_PATH: "./data/pose_dataset.pkl"             # shared between train and eval
   CHECKPOINT_PATH: "./runs/pose_estimator/best.pt"
   ONNX_EXPORT_PATH: "./runs/pose_estimator/pose_estimator.onnx"
-  NUM_DATASET_IMAGES: 4000
-  POS_IMAGE_SIZE: 320
-  ROTATION_IMAGE_SIZE: 128
+  NUM_DATASET_IMAGES: 4000        # number of frames the pose dataset generator creates
+  POS_IMAGE_SIZE: 320             # input size for the position stream (full scene)
+  ROTATION_IMAGE_SIZE: 128        # input size for the rotation stream (object crop)
   DROPOUT: 0.3
   BATCH_SIZE: 16
   EPOCHS: 200
   LEARNING_RATE: 0.0001
-  EARLY_STOPPING_PATIENCE: 20
+  EARLY_STOPPING_PATIENCE: 20     # 0 or null disables early stopping (always runs all EPOCHS)
   VAL_SPLIT: 0.15
   TEST_SPLIT: 0.15
-  ROTATION_LOSS_WEIGHT: 1.0
-  # Every class's mean absolute xyz error (cm) AND rotation error (below)
-  # must meet its threshold before the model is exported to ONNX -- a
-  # class-averaged score can no longer hide one bad class (see xyz_r2).
+  ROTATION_LOSS_WEIGHT: 1.0       # how much the rotation loss counts, relative to the position loss
+
+  # The model is only exported to ONNX if every class's mean position error
+  # (cm) AND rotation error (below) both meet their threshold. An average
+  # across classes is not enough, since it can hide one weak class (see
+  # xyz_r2 note in the README).
   EXPORT_POSITION_THRESHOLD_CM: 1.0
   EXPORT_ROTATION_THRESHOLD_DEG: 5.0
-  # Classes with full rotational symmetry about their vertical axis: any
-  # yaw is visually and functionally equivalent, so their "rotation error"
-  # is meaningless noise, not a real capability gap -- the control repo's
-  # controller already grasps these yaw-agnostically. Excluded from the
-  # rotation loss (so noisy/arbitrary targets don't pollute the shared
-  # rotation backbone's gradient), the reported macro rotation metric, and
-  # the rotation half of the export gate. Position still applies to them.
+
+  # Classes that look the same at any rotation. A can looks and grasps the
+  # same no matter how it's turned, so it has no real "correct" rotation to
+  # learn from. These classes are left out of the rotation loss, the
+  # rotation metric, and the rotation part of the export check above. Their
+  # position is still scored normally. See the README for the full reason.
   ROTATION_SYMMETRIC_CLASSES: ["Can"]

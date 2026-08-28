@@ -13,13 +13,13 @@ from src.util.types import Detection
 
 class OnnxDetector:
     """
-    Loads a YOLO ONNX export and runs single-image inference through
-    onnxruntime, reproducing the preprocessing used to build the
-    training dataset ("Auto-Orient" + "Fit (black edges)" resize to
-    a square canvas).
+    Loads a YOLO ONNX model and runs inference on one image at a time,
+    using onnxruntime. It repeats the same preprocessing steps used to
+    build the training dataset: "Auto-Orient" plus a "Fit (black edges)"
+    resize to a square canvas.
     """
 
-    LETTERBOX_PAD_COLOR = (0, 0, 0)  # Black edges, matching Roboflow's "Fit" resize.
+    LETTERBOX_PAD_COLOR = (0, 0, 0)  # Black padding, matching Roboflow's "Fit" resize.
 
     def __init__(
         self,
@@ -35,10 +35,10 @@ class OnnxDetector:
 
         Args:
             model_path (str): Path to the exported YOLO ONNX model.
-            data_yaml_path (str): Path to the dataset's data.yaml, used
-                only to read the ordered class name list.
-            image_size (int): Square letterbox canvas size the model
-                expects as input.
+            data_yaml_path (str): Path to the dataset's data.yaml file.
+                Only used to read the ordered list of class names.
+            image_size (int): Size of the square letterbox canvas that
+                the model expects as input.
             intra_op_threads (int): ONNX Runtime intra-op thread count.
             inter_op_threads (int): ONNX Runtime inter-op thread count.
             logger: Logger instance. Defaults to a module logger.
@@ -76,7 +76,7 @@ class OnnxDetector:
     def _letterbox(self, image: np.ndarray):
         """
         Resizes `image` to fit inside a square `image_size` canvas while
-        preserving aspect ratio, padding the rest with black -- matching
+        keeping its aspect ratio. Pads the rest with black, matching
         Roboflow's "Fit (black edges)" preprocessing used to build the
         training dataset.
 
@@ -85,9 +85,9 @@ class OnnxDetector:
 
         Returns:
             Tuple[np.ndarray, float, int, int]:
-                (letterboxed canvas, scale factor, left pad, top pad) --
-                scale/pads are needed to map detections back to original
-                image coordinates in `_postprocess`.
+                (letterboxed canvas, scale factor, left pad, top pad).
+                `_postprocess` needs the scale and pads to map detections
+                back to the original image coordinates.
         """
 
         height, width = image.shape[:2]
@@ -128,8 +128,8 @@ class OnnxDetector:
         conf_threshold, iou_threshold,
     ) -> List[Detection]:
         """
-        Converts raw model output into filtered, NMS'd Detections in
-        original-image pixel coordinates.
+        Converts the raw model output into filtered Detections, after
+        non-max suppression (NMS), in original-image pixel coordinates.
 
         Args:
             output: Raw model output for one image, shape (4 + nc, num_anchors).
@@ -204,8 +204,8 @@ class OnnxDetector:
 
     def predict(self, image: np.ndarray, conf_threshold: float = 0.25, iou_threshold: float = 0.45):
         """
-        Runs the full preprocess -> inference -> postprocess pipeline
-        on a single image.
+        Runs the full pipeline on a single image: preprocess, then run
+        inference, then postprocess the output.
 
         Args:
             image (np.ndarray): Source image (H, W, 3) in BGR.
@@ -249,9 +249,10 @@ class OnnxDetector:
         iou_threshold: float = 0.45,
     ) -> List[List[Detection]]:
         """
-        Runs the full preprocess -> inference -> postprocess pipeline on a
-        batch of images in a single ONNX forward pass -- much faster than
-        calling predict() in a loop when generating large datasets.
+        Runs the full pipeline (preprocess, inference, postprocess) on a
+        batch of images in a single ONNX forward pass. This is much faster
+        than calling predict() in a loop, which matters when generating
+        large datasets.
 
         Args:
             images (List[np.ndarray]): Source images (H, W, 3) in BGR.

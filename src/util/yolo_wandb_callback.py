@@ -14,17 +14,17 @@ from src.util.types import SystemConfig
 
 class YOLOWandBCallback:
     """
-    Custom Weights & Biases callback for Ultralytics YOLO.
+    Weights & Biases callback for Ultralytics YOLO training and testing.
 
     Logs:
     - train metrics
     - validation metrics
     - test metrics
     - learning rates
-    - train/val/test media
+    - train/val/test images (plots)
     - model information
-    - PR / F1 / Precision / Recall curves
-    - best model artifact
+    - PR / F1 / precision / recall curves
+    - the best model, as a W&B artifact
     """
 
     def __init__(
@@ -54,10 +54,11 @@ class YOLOWandBCallback:
         enabled: bool = True,
     ) -> Optional["YOLOWandBCallback"]:
         """
-        Starts a W&B run and attaches a YOLOWandBCallback to the trainer.
+        Starts a W&B run, and attaches a YOLOWandBCallback to the
+        trainer's callbacks.
 
         Args:
-            trainer (YOLOTrainer): Trainer whose model callbacks are wired up.
+            trainer (YOLOTrainer): Trainer to attach the callback to.
             config (SystemConfig): Full run config, logged to W&B.
             logger: Logger instance.
             enabled (bool): If False, tracking is skipped.
@@ -105,12 +106,15 @@ class YOLOWandBCallback:
         prefix: str
     ) -> None:
         """
-        Logs media plots to W&B.
+        Logs plot images (such as the confusion matrix or PR curves) to
+        W&B, as Ultralytics produces them.
 
         Args:
-            plots (dict): Plot dictionary.
-            step (int): Current epoch.
-            prefix (str): Namespace prefix.
+            plots (dict): Maps each plot's file path to info about it,
+                including a "timestamp" used to skip plots already logged.
+            step (int): The current epoch.
+            prefix (str): Namespace prefix for the media key, e.g.
+                "train" or "val".
 
         Returns:
             None
@@ -138,11 +142,13 @@ class YOLOWandBCallback:
         step: int
     ) -> None:
         """
-        Logs PR/F1/P/R curves to W&B.
+        Logs the precision-recall, F1, precision, and recall curves to
+        W&B: one mean curve averaged over all classes, plus one curve
+        per class.
 
         Args:
             trainer: Ultralytics trainer instance.
-            step (int): Current epoch.
+            step (int): The current epoch.
 
         Returns:
             None
@@ -234,7 +240,9 @@ class YOLOWandBCallback:
         trainer
     ) -> None:
         """
-        Logs training metrics after each epoch.
+        Logs training data for one epoch: the training losses, the
+        learning rates, and any new training plots. Also logs the model
+        info once, after the first epoch.
 
         Args:
             trainer: Ultralytics trainer instance.
@@ -289,7 +297,9 @@ class YOLOWandBCallback:
         trainer
     ) -> None:
         """
-        Logs validation metrics after each epoch.
+        Logs validation data for one epoch: the validation losses and
+        metrics, any new validation plots, and the PR/F1/precision/recall
+        curves.
 
         Args:
             trainer: Ultralytics trainer instance.
@@ -350,7 +360,8 @@ class YOLOWandBCallback:
         trainer
     ) -> None:
         """
-        Logs final trained model artifact.
+        Saves the best model checkpoint to W&B as an artifact, once
+        training finishes.
 
         Args:
             trainer: Ultralytics trainer instance.
@@ -382,7 +393,8 @@ class YOLOWandBCallback:
         save_dir: str
     ) -> None:
         """
-        Logs test metrics and test media.
+        Logs the test set metrics, and any images saved during testing
+        (for example the confusion matrix), to W&B.
 
         Args:
             metrics (dict): Test metrics.

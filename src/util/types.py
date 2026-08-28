@@ -10,8 +10,9 @@ class RoboflowConfig:
 
     workspace_name: str
     project_name: str
-    # Local folder name for the downloaded dataset, independent of the
-    # Roboflow project slug (see RoboflowDownloader.resolve_local_folder_path).
+    # Local folder name for the downloaded dataset. This does not have to
+    # match the Roboflow project's slug (see
+    # RoboflowDownloader.resolve_local_folder_path).
     dataset_folder_name: str
     version_number: int
     model_format: str
@@ -19,14 +20,15 @@ class RoboflowConfig:
 
 @dataclass
 class EnvironmentConfig:
-    """Simulation settings that must match the deployment environment (config.yaml `ENVIRONMENT`).
+    """Simulation settings that must match the real robot setup (config.yaml `ENVIRONMENT`).
 
-    robot_base_offset must match the value used by the consuming control
-    repo's environment: PoseEstimator's xyz stream sees the crop_region-
-    cropped agentview frame, robot arm included, so training scenes need
-    to reflect where the arm actually sits in production -- otherwise the
-    model partly keys off the arm's on-screen position and mispredicts by
-    roughly the mismatch.
+    robot_base_offset must match the value used in the other repo that
+    actually controls the robot. Here is why: PoseEstimator's xyz stream
+    looks at the cropped agentview frame (see crop_region), and the robot
+    arm is visible in that frame. So the training scenes need to show the
+    arm in the same place it will be in production. If they don't match,
+    the model partly learns to guess position from where the arm appears
+    on screen, and it will be off by roughly the size of that mismatch.
     """
 
     robot_base_offset: Tuple[float, float, float]
@@ -52,9 +54,10 @@ class YoloConfig:
 @dataclass
 class UltralyticsConfig:
     """
-    Toggles for Ultralytics' own built-in experiment trackers
-    (config.yaml `ULTRALYTICS`). Kept off since this project logs to W&B
-    itself via YOLOWandBCallback/PoseWandBCallback instead.
+    On/off switches for Ultralytics' own built-in experiment trackers
+    (config.yaml `ULTRALYTICS`). These are kept off, since this project
+    logs to W&B itself instead, through YOLOWandBCallback and
+    PoseWandBCallback.
     """
 
     wandb: bool
@@ -70,7 +73,8 @@ class PoseConfig:
 
     project_name: str
     run_name: str
-    # Shared between generation and train/eval - see PoseDatasetGenerator.
+    # Used by both dataset generation and train/eval. See
+    # PoseDatasetGenerator.
     pose_dataset_path: str
     checkpoint_path: str
     onnx_export_path: str
@@ -94,21 +98,23 @@ class PoseConfig:
     # Maximum mean absolute xyz error (cm) *every* class must meet to
     # export the trained model to ONNX.
     export_position_threshold_cm: float
-    # Maximum mean rotation error (degrees) *every* class must meet to
-    # export to ONNX. Both this and export_position_threshold_cm must be
-    # met, per class -- a good class-averaged score is not enough.
+    # Maximum mean rotation error (degrees) that *every* class must meet
+    # to export to ONNX. Both this and export_position_threshold_cm must
+    # be met, per class. A good score averaged across classes is not
+    # enough on its own.
     export_rotation_threshold_deg: float
-    # Classes with full rotational symmetry about their vertical axis (e.g.
-    # a cylindrical can): any yaw is equally valid, so their rotation
-    # target is meaningless noise. Excluded from the rotation loss, the
-    # reported macro rotation metric, and the rotation half of the export
-    # gate -- position still applies to them.
+    # Classes with full rotational symmetry around their vertical axis
+    # (for example, a cylindrical can). Any yaw angle looks the same for
+    # these classes, so their "correct" rotation is meaningless noise to
+    # train on. They are left out of the rotation loss, the reported
+    # average rotation metric, and the rotation half of the export check.
+    # Their position is still checked normally.
     rotation_symmetric_classes: List[str] = field(default_factory=list)
 
 
 @dataclass
 class SystemConfig:
-    """Top-level, typed view of config.yaml - see SystemConfigurator.load()."""
+    """Top-level, typed view of config.yaml. See SystemConfigurator.load()."""
 
     data_folder: str
     generate_dataset: bool
@@ -172,12 +178,14 @@ class PoseLabel:
 @dataclass
 class PoseSample:
     """
-    A single training sample for the pose model: a detected object's bbox
-    (in its full agentview frame, see PoseDatasetGenerator's frames dict)
-    plus its camera-frame ground-truth pose. The full frame -- not just the
-    object crop -- is used as model input, with the bbox as an extra input,
-    since a tightly cropped/resized object image alone carries no scale or
-    position information to regress absolute xyz from.
+    A single training sample for the pose model. It holds a detected
+    object's bounding box (in its full agentview frame, see
+    PoseDatasetGenerator's frames dict), plus its ground-truth pose in
+    camera-frame coordinates. The model takes the full frame as input,
+    not just a crop of the object, with the bounding box passed in as
+    extra input. A tightly cropped and resized image of the object alone
+    does not carry enough scale or position information to predict its
+    absolute xyz position on its own.
     """
 
     frame_index: int  # index into PoseDatasetGenerator's saved frames dict
@@ -189,14 +197,15 @@ class PoseSample:
 
 @dataclass
 class PoseDatasetGeneratorConfig:
-    """Settings for PoseDatasetGenerator's detection + sampling pass."""
+    """Settings for PoseDatasetGenerator's detection and sampling pass."""
 
     save_path: str = "./data/pose_dataset/pose_dataset.pkl"
     # Minimum YOLO detection confidence for a box to be used as a sample.
     conf_threshold: float = 0.25
     # IoU threshold for YOLO's NMS.
     iou_threshold: float = 0.45
-    # Number of frames captured/detected per ONNX forward pass.
+    # Number of frames captured and run through detection per ONNX
+    # forward pass.
     batch_size: int = 16
     # Safety cap: give up after num_images * max_attempts_multiplier frames,
     # in case the detector rarely produces a clean one-per-class result.

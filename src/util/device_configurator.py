@@ -9,17 +9,17 @@ from src.util.types import DeviceConfig
 
 class DeviceConfigurator:
     """
-    Detects the available compute device and configures torch/onnxruntime
-    for it.
+    Detects the available compute device and sets up torch and
+    onnxruntime to use it.
 
-    Picks the best available torch device (cuda > mps > cpu) and the
-    matching ONNX Runtime execution provider, so the rest of the pipeline
-    doesn't need to duplicate that detection logic.
+    Picks the best torch device available (cuda, then mps, then cpu) and
+    the matching ONNX Runtime execution provider. This way the rest of
+    the pipeline does not need to repeat this detection logic.
     """
 
     def __init__(self, logger: Optional[logging.Logger] = None) -> None:
         """
-        Initializes the DeviceConfigurator.
+        Sets up the DeviceConfigurator.
 
         Args:
             logger (Optional[logging.Logger]): Logger instance. If given,
@@ -32,10 +32,10 @@ class DeviceConfigurator:
 
         self.logger = logger
 
-        # Preferred ONNX Runtime execution provider per torch device, in
-        # case it's available on this machine. CPUExecutionProvider is
-        # always appended separately as a fallback in
-        # `_resolve_onnx_providers`, regardless of what's in this map.
+        # The ONNX Runtime execution provider to prefer for each torch
+        # device, if it is available on this machine. CPUExecutionProvider
+        # is always added separately as a fallback in
+        # `_resolve_onnx_providers`, no matter what is in this map.
         self._onnx_provider_by_torch_device = {
             "cuda": "CUDAExecutionProvider",
             "mps": "CoreMLExecutionProvider",
@@ -43,10 +43,10 @@ class DeviceConfigurator:
 
     def resolve(self) -> DeviceConfig:
         """
-        Resolves the compute device to use for this run.
+        Works out which compute device to use for this run.
 
         Returns:
-            DeviceConfig: The chosen torch device plus the ONNX Runtime
+            DeviceConfig: The chosen torch device, plus the ONNX Runtime
                 execution providers to use, in priority order.
         """
 
@@ -90,11 +90,11 @@ class DeviceConfigurator:
         Returns:
             list[str]: Execution providers in priority order. The
                 hardware-accelerated provider for `torch_device` comes
-                first if it's actually installed/available on this
-                machine (e.g. `onnxruntime-gpu` isn't installed on a CPU-
-                only setup, even if torch itself reports "cuda").
-                "CPUExecutionProvider" is always included last as a
-                fallback.
+                first, but only if it is actually installed and available
+                on this machine. For example, `onnxruntime-gpu` might not
+                be installed on a CPU-only setup, even if torch itself
+                reports "cuda". "CPUExecutionProvider" is always included
+                last, as a fallback.
         """
 
         available_providers = ort.get_available_providers()

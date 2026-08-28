@@ -13,7 +13,7 @@ from src.util.types import (
 )
 
 class ConfigReader:
-    """Read and parse YAML configuration from disk."""
+    """Reads and parses the YAML configuration file from disk."""
 
     def __init__(self, config_path: Path):
         self._config_path = config_path
@@ -44,7 +44,7 @@ class ConfigReader:
 
 
 class ConfigAssembler:
-    """Assemble a typed SystemConfig from a raw YAML mapping."""
+    """Builds a typed SystemConfig from a raw YAML mapping."""
 
     def assemble(self, raw: Mapping[str, Any]) -> SystemConfig:
         try:
@@ -123,7 +123,7 @@ class SystemConfigurator:
     @classmethod
     def load(cls, config_path: Path = DEFAULT_CONFIG_PATH) -> SystemConfig:
         """
-        Reads and assembles the typed SystemConfig.
+        Reads config.yaml and builds the typed SystemConfig.
 
         Args:
             config_path (Path): Path to the YAML config file.
