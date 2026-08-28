@@ -5,20 +5,20 @@ from src.util.logging_configurator import LoggingConfigurator
 # soon as it is imported.
 LoggingConfigurator.suppress_robosuite_warnings()
 
-from dataclasses import asdict
-import wandb
 import os
+from dataclasses import asdict
 
-from src.util.system_configurator import SystemConfigurator
-from src.util.device_configurator import DeviceConfigurator
-from src.util.types import CropRegion, ImageSize
-from src.data_preparation.dataset_generator import DatasetGenerator
-from src.data_preparation.data_retriever import RoboflowDownloader
-from src.training.yolo_trainer import YOLOTrainer
-from src.evaluation.yolo_evaluator import YOLOEvaluator
-from src.util.yolo_wandb_callback import YOLOWandBCallback
-
+import wandb
 from ultralytics import settings
+
+from src.data_preparation.data_retriever import RoboflowDownloader
+from src.data_preparation.dataset_generator import DatasetGenerator
+from src.evaluation.yolo_evaluator import YOLOEvaluator
+from src.training.yolo_trainer import YOLOTrainer
+from src.util.device_configurator import DeviceConfigurator
+from src.util.system_configurator import SystemConfigurator
+from src.util.types import CropRegion, ImageSize
+from src.util.yolo_wandb_callback import YOLOWandBCallback
 
 
 def main() -> None:
@@ -44,12 +44,10 @@ def main() -> None:
         num_images=10000,
         image_size=ImageSize(height=1080, width=1920),
         crop_region=CropRegion(y1=350, y2=748, x1=400, x2=975),
-        logger=logger
+        logger=logger,
     )
 
-    generator.generate(
-        enabled=config.generate_dataset
-    )
+    generator.generate(enabled=config.generate_dataset)
 
     # ===== DOWNLOAD =====
     downloader = RoboflowDownloader(
@@ -60,18 +58,12 @@ def main() -> None:
         version_number=config.roboflow.version_number,
         data_path=config.data_folder,
         model=config.roboflow.model_format,
-        logger=logger
+        logger=logger,
     )
 
-    project_folder_path = downloader.download_dataset(
-        config.download_dataset
-    )
+    project_folder_path = downloader.download_dataset(config.download_dataset)
 
-    data_yaml_path = (
-        f"{project_folder_path}/data.yaml"
-        if project_folder_path
-        else ""
-    )
+    data_yaml_path = f"{project_folder_path}/data.yaml" if project_folder_path else ""
 
     if not data_yaml_path:
         logger.warning(
@@ -90,7 +82,7 @@ def main() -> None:
         device=device,
         project_name=config.yolo.project_name,
         run_name=config.yolo.run_name,
-        logger=logger
+        logger=logger,
     )
 
     callback = YOLOWandBCallback.setup(
@@ -100,9 +92,7 @@ def main() -> None:
         enabled=config.train_yolo,
     )
 
-    train_dir = trainer.train(
-        config.train_yolo
-    )
+    train_dir = trainer.train(config.train_yolo)
 
     # ===== EVALUATION =====
     evaluator = YOLOEvaluator(
@@ -114,27 +104,23 @@ def main() -> None:
         run_name=config.yolo.run_name,
         export_onnx_name=config.yolo.export_onnx_name,
         export_onnx_threshold=config.yolo.export_onnx_threshold,
-        logger=logger
+        logger=logger,
     )
 
-    evaluation_results = evaluator.evaluate(
-        enabled=config.eval_yolo
-    )
+    evaluation_results = evaluator.evaluate(enabled=config.eval_yolo)
 
     if evaluation_results is not None and callback is not None:
 
         callback.log_test_results(
             metrics=evaluation_results["results"],
-            save_dir=evaluation_results["save_dir"]
+            save_dir=evaluation_results["save_dir"],
         )
 
     if wandb.run is not None:
 
         wandb.finish()
 
-    logger.info(
-        "Pipeline completed successfully."
-    )
+    logger.info("Pipeline completed successfully.")
 
 
 if __name__ == "__main__":

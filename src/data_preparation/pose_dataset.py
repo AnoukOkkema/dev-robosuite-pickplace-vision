@@ -42,12 +42,16 @@ class PoseDataset(Dataset):
       al., 2019.
     """
 
-    def __init__(self, pickle_path: str, image_size: int = 224, rotation_image_size: int = 128) -> None:
+    def __init__(
+        self, pickle_path: str, image_size: int = 224, rotation_image_size: int = 128
+    ) -> None:
         data = pd.read_pickle(pickle_path)
         self.frames = data["frames"]
         self.df = data["samples"]
         self.class_names = data["class_names"]
-        self.class_to_index = {name: index for index, name in enumerate(self.class_names)}
+        self.class_to_index = {
+            name: index for index, name in enumerate(self.class_names)
+        }
         self.image_size = image_size
         self.rotation_image_size = rotation_image_size
 
@@ -65,7 +69,12 @@ class PoseDataset(Dataset):
         image = torch.from_numpy(image).permute(2, 0, 1)
 
         x1, y1, x2, y2 = row["bbox"]
-        x1n, y1n, x2n, y2n = x1 / frame_width, y1 / frame_height, x2 / frame_width, y2 / frame_height
+        x1n, y1n, x2n, y2n = (
+            x1 / frame_width,
+            y1 / frame_height,
+            x2 / frame_width,
+            y2 / frame_height,
+        )
         area = (x2n - x1n) * (y2n - y1n)
         cx, cy = (x1n + x2n) / 2, (y1n + y2n) / 2
 
@@ -84,7 +93,9 @@ class PoseDataset(Dataset):
         if object_crop.size == 0:
             object_crop = frame
 
-        crop = cv2.resize(object_crop, (self.rotation_image_size, self.rotation_image_size))
+        crop = cv2.resize(
+            object_crop, (self.rotation_image_size, self.rotation_image_size)
+        )
         crop = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
         crop = torch.from_numpy(crop).permute(2, 0, 1)
 

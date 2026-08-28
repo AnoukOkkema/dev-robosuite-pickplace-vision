@@ -12,6 +12,7 @@ from src.util.types import (
     YoloConfig,
 )
 
+
 class ConfigReader:
     """Reads and parses the YAML configuration file from disk."""
 
@@ -38,7 +39,8 @@ class ConfigReader:
 
         if not isinstance(raw, dict):
             raise TypeError(
-                f"Invalid data in config structure: expected mapping at root, got {type(raw).__name__}"
+                "Invalid data in config structure: expected mapping at "
+                f"root, got {type(raw).__name__}"
             )
         return raw
 
@@ -102,8 +104,12 @@ class ConfigAssembler:
                     val_split=raw["POSE"]["VAL_SPLIT"],
                     test_split=raw["POSE"]["TEST_SPLIT"],
                     rotation_loss_weight=raw["POSE"]["ROTATION_LOSS_WEIGHT"],
-                    export_position_threshold_cm=raw["POSE"]["EXPORT_POSITION_THRESHOLD_CM"],
-                    export_rotation_threshold_deg=raw["POSE"]["EXPORT_ROTATION_THRESHOLD_DEG"],
+                    export_position_threshold_cm=raw["POSE"][
+                        "EXPORT_POSITION_THRESHOLD_CM"
+                    ],
+                    export_rotation_threshold_deg=raw["POSE"][
+                        "EXPORT_ROTATION_THRESHOLD_DEG"
+                    ],
                     rotation_symmetric_classes=raw["POSE"].get(
                         "ROTATION_SYMMETRIC_CLASSES", []
                     ),

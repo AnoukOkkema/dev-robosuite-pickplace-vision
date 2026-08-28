@@ -102,21 +102,23 @@ class OnnxDetector:
         )
 
         canvas = np.full(
-            (self.image_size, self.image_size, 3), self.LETTERBOX_PAD_COLOR, dtype=np.uint8
+            (self.image_size, self.image_size, 3),
+            self.LETTERBOX_PAD_COLOR,
+            dtype=np.uint8,
         )
 
         pad_top = (self.image_size - new_height) // 2
         pad_left = (self.image_size - new_width) // 2
 
-        canvas[
-            pad_top:pad_top + new_height,
-            pad_left:pad_left + new_width
-        ] = resized
+        canvas[pad_top : pad_top + new_height, pad_left : pad_left + new_width] = (
+            resized
+        )
 
         return canvas, scale, pad_left, pad_top
 
     def _to_blob(self, letterboxed_bgr: np.ndarray) -> np.ndarray:
-        """Converts a letterboxed BGR image to a normalized NCHW float32 blob for the model input."""
+        """Converts a letterboxed BGR image to a normalized NCHW float32
+        blob for the model input."""
 
         rgb = cv2.cvtColor(letterboxed_bgr, cv2.COLOR_BGR2RGB)
         normalized = rgb.astype(np.float32) / 255.0
@@ -124,8 +126,14 @@ class OnnxDetector:
         return np.expand_dims(chw, axis=0)
 
     def _postprocess(
-        self, output, scale, pad_left, pad_top, original_size,
-        conf_threshold, iou_threshold,
+        self,
+        output,
+        scale,
+        pad_left,
+        pad_top,
+        original_size,
+        conf_threshold,
+        iou_threshold,
     ) -> List[Detection]:
         """
         Converts the raw model output into filtered Detections, after
@@ -161,12 +169,14 @@ class OnnxDetector:
         if len(boxes_cxcywh) == 0:
             return []
 
-        boxes_xywh = np.column_stack([
-            boxes_cxcywh[:, 0] - boxes_cxcywh[:, 2] / 2,
-            boxes_cxcywh[:, 1] - boxes_cxcywh[:, 3] / 2,
-            boxes_cxcywh[:, 2],
-            boxes_cxcywh[:, 3],
-        ])
+        boxes_xywh = np.column_stack(
+            [
+                boxes_cxcywh[:, 0] - boxes_cxcywh[:, 2] / 2,
+                boxes_cxcywh[:, 1] - boxes_cxcywh[:, 3] / 2,
+                boxes_cxcywh[:, 2],
+                boxes_cxcywh[:, 3],
+            ]
+        )
 
         keep_indices = cv2.dnn.NMSBoxes(
             boxes_xywh.tolist(),
@@ -202,7 +212,12 @@ class OnnxDetector:
 
         return detections
 
-    def predict(self, image: np.ndarray, conf_threshold: float = 0.25, iou_threshold: float = 0.45):
+    def predict(
+        self,
+        image: np.ndarray,
+        conf_threshold: float = 0.25,
+        iou_threshold: float = 0.45,
+    ):
         """
         Runs the full pipeline on a single image: preprocess, then run
         inference, then postprocess the output.

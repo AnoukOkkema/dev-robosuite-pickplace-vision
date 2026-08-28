@@ -2,12 +2,10 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Optional
 
-import wandb
 import numpy as np
+import wandb
+from ultralytics.utils.torch_utils import model_info_for_loggers
 
-from ultralytics.utils.torch_utils import (
-    model_info_for_loggers
-)
 from src.training.yolo_trainer import YOLOTrainer
 from src.util.types import SystemConfig
 
@@ -27,10 +25,7 @@ class YOLOWandBCallback:
     - the best model, as a W&B artifact
     """
 
-    def __init__(
-        self,
-        logger
-    ) -> None:
+    def __init__(self, logger) -> None:
         """
         Initializes the callback.
 
@@ -78,33 +73,17 @@ class YOLOWandBCallback:
             config=asdict(config),
         )
 
-        callback = cls(
-            logger=logger
-        )
+        callback = cls(logger=logger)
 
-        trainer.model.add_callback(
-            "on_train_epoch_end",
-            callback.on_train_epoch_end
-        )
+        trainer.model.add_callback("on_train_epoch_end", callback.on_train_epoch_end)
 
-        trainer.model.add_callback(
-            "on_fit_epoch_end",
-            callback.on_fit_epoch_end
-        )
+        trainer.model.add_callback("on_fit_epoch_end", callback.on_fit_epoch_end)
 
-        trainer.model.add_callback(
-            "on_train_end",
-            callback.on_train_end
-        )
+        trainer.model.add_callback("on_train_end", callback.on_train_end)
 
         return callback
 
-    def _log_plots(
-        self,
-        plots: dict,
-        step: int,
-        prefix: str
-    ) -> None:
+    def _log_plots(self, plots: dict, step: int, prefix: str) -> None:
         """
         Logs plot images (such as the confusion matrix or PR curves) to
         W&B, as Ultralytics produces them.
@@ -128,19 +107,16 @@ class YOLOWandBCallback:
 
                 wandb.log(
                     {
-                        f"media-{prefix}/{Path(plot_path).stem}":
-                            wandb.Image(str(plot_path))
+                        f"media-{prefix}/{Path(plot_path).stem}": wandb.Image(
+                            str(plot_path)
+                        )
                     },
-                    step=step
+                    step=step,
                 )
 
                 self.processed_plots[plot_path] = timestamp
 
-    def _log_curves(
-        self,
-        trainer,
-        step: int
-    ) -> None:
+    def _log_curves(self, trainer, step: int) -> None:
         """
         Logs the precision-recall, F1, precision, and recall curves to
         W&B: one mean curve averaged over all classes, plus one curve
@@ -154,19 +130,13 @@ class YOLOWandBCallback:
             None
         """
 
-        if not hasattr(
-            trainer.validator.metrics,
-            "curves_results"
-        ):
+        if not hasattr(trainer.validator.metrics, "curves_results"):
             return
 
-        class_names = list(
-            trainer.validator.metrics.names.values()
-        )
+        class_names = list(trainer.validator.metrics.names.values())
 
         for curve_name, curve_values in zip(
-            trainer.validator.metrics.curves,
-            trainer.validator.metrics.curves_results
+            trainer.validator.metrics.curves, trainer.validator.metrics.curves_results
         ):
 
             x, y, x_title, y_title = curve_values
@@ -174,71 +144,40 @@ class YOLOWandBCallback:
             data = []
 
             # ===== MEAN CURVE =====
-            mean_curve = np.mean(
-                y,
-                axis=0
-            )
+            mean_curve = np.mean(y, axis=0)
 
             for xi, yi in zip(x, mean_curve):
 
-                data.append([
-                    float(xi),
-                    float(yi),
-                    "mean"
-                ])
+                data.append([float(xi), float(yi), "mean"])
 
             # ===== PER CLASS CURVES =====
-            for class_index, class_name in enumerate(
-                class_names
-            ):
+            for class_index, class_name in enumerate(class_names):
 
                 class_curve = y[class_index]
 
-                for xi, yi in zip(
-                    x,
-                    class_curve
-                ):
+                for xi, yi in zip(x, class_curve):
 
-                    data.append([
-                        float(xi),
-                        float(yi),
-                        class_name
-                    ])
+                    data.append([float(xi), float(yi), class_name])
 
-            table = wandb.Table(
-                data=data,
-                columns=[
-                    x_title,
-                    y_title,
-                    "class"
-                ]
-            )
+            table = wandb.Table(data=data, columns=[x_title, y_title, "class"])
 
             wandb.log(
                 {
-                    f"curves/{curve_name}":
-                        wandb.plot_table(
-                            "wandb/area-under-curve/v0",
-                            table,
-                            {
-                                "x": x_title,
-                                "y": y_title,
-                                "class": "class"
-                            },
-                            {
-                                "title": curve_name,
-                                "x-axis-title": x_title,
-                                "y-axis-title": y_title,
-                            }
-                        )
+                    f"curves/{curve_name}": wandb.plot_table(
+                        "wandb/area-under-curve/v0",
+                        table,
+                        {"x": x_title, "y": y_title, "class": "class"},
+                        {
+                            "title": curve_name,
+                            "x-axis-title": x_title,
+                            "y-axis-title": y_title,
+                        },
+                    )
                 },
-                step=step
+                step=step,
             )
 
-    def on_train_epoch_end(
-        self,
-        trainer
-    ) -> None:
+    def on_train_epoch_end(self, trainer) -> None:
         """
         Logs training data for one epoch: the training losses, the
         learning rates, and any new training plots. Also logs the model
@@ -254,48 +193,24 @@ class YOLOWandBCallback:
         epoch = trainer.epoch + 1
 
         # ===== TRAIN LOSSES =====
-        train_metrics = trainer.label_loss_items(
-            trainer.tloss,
-            prefix="train"
-        )
+        train_metrics = trainer.label_loss_items(trainer.tloss, prefix="train")
 
-        wandb.log(
-            train_metrics,
-            step=epoch
-        )
+        wandb.log(train_metrics, step=epoch)
 
         # ===== LEARNING RATES =====
-        wandb.log(
-            trainer.lr,
-            step=epoch
-        )
+        wandb.log(trainer.lr, step=epoch)
 
         # ===== MODEL INFO =====
         if epoch == 1:
 
-            wandb.log(
-                model_info_for_loggers(
-                    trainer
-                ),
-                step=epoch
-            )
+            wandb.log(model_info_for_loggers(trainer), step=epoch)
 
         # ===== TRAIN MEDIA =====
-        self._log_plots(
-            trainer.plots,
-            step=epoch,
-            prefix="train"
-        )
+        self._log_plots(trainer.plots, step=epoch, prefix="train")
 
-        self.logger.info(
-            "Logged training metrics | epoch=%d",
-            epoch
-        )
+        self.logger.info("Logged training metrics | epoch=%d", epoch)
 
-    def on_fit_epoch_end(
-        self,
-        trainer
-    ) -> None:
+    def on_fit_epoch_end(self, trainer) -> None:
         """
         Logs validation data for one epoch: the validation losses and
         metrics, any new validation plots, and the PR/F1/precision/recall
@@ -322,43 +237,21 @@ class YOLOWandBCallback:
             # ===== VALIDATION PERFORMANCE =====
             elif key.startswith("metrics/"):
 
-                clean_key = (
-                    key
-                    .replace("metrics/", "")
-                    .replace("(B)", "")
-                )
+                clean_key = key.replace("metrics/", "").replace("(B)", "")
 
-                validation_metrics[
-                    f"val/{clean_key}"
-                ] = value
+                validation_metrics[f"val/{clean_key}"] = value
 
-        wandb.log(
-            validation_metrics,
-            step=epoch
-        )
+        wandb.log(validation_metrics, step=epoch)
 
         # ===== VALIDATION MEDIA =====
-        self._log_plots(
-            trainer.validator.plots,
-            step=epoch,
-            prefix="val"
-        )
+        self._log_plots(trainer.validator.plots, step=epoch, prefix="val")
 
         # ===== VALIDATION CURVES =====
-        self._log_curves(
-            trainer,
-            step=epoch
-        )
+        self._log_curves(trainer, step=epoch)
 
-        self.logger.info(
-            "Logged validation metrics | epoch=%d",
-            epoch
-        )
+        self.logger.info("Logged validation metrics | epoch=%d", epoch)
 
-    def on_train_end(
-        self,
-        trainer
-    ) -> None:
+    def on_train_end(self, trainer) -> None:
         """
         Saves the best model checkpoint to W&B as an artifact, once
         training finishes.
@@ -370,28 +263,15 @@ class YOLOWandBCallback:
             None
         """
 
-        artifact = wandb.Artifact(
-            name="best-model",
-            type="model"
-        )
+        artifact = wandb.Artifact(name="best-model", type="model")
 
-        artifact.add_file(
-            str(trainer.best)
-        )
+        artifact.add_file(str(trainer.best))
 
-        wandb.log_artifact(
-            artifact
-        )
+        wandb.log_artifact(artifact)
 
-        self.logger.info(
-            "Logged best model artifact."
-        )
+        self.logger.info("Logged best model artifact.")
 
-    def log_test_results(
-        self,
-        metrics: dict,
-        save_dir: str
-    ) -> None:
+    def log_test_results(self, metrics: dict, save_dir: str) -> None:
         """
         Logs the test set metrics, and any images saved during testing
         (for example the confusion matrix), to W&B.
@@ -409,40 +289,21 @@ class YOLOWandBCallback:
 
         for key, value in metrics.items():
 
-            clean_key = (
-                key
-                .replace("metrics/", "")
-                .replace("(B)", "")
-            )
+            clean_key = key.replace("metrics/", "").replace("(B)", "")
 
-            test_metrics[
-                f"test/{clean_key}"
-            ] = value
+            test_metrics[f"test/{clean_key}"] = value
 
-        wandb.log(
-            test_metrics
-        )
+        wandb.log(test_metrics)
 
         # ===== TEST MEDIA =====
         save_dir = Path(save_dir)
 
         for image_path in save_dir.rglob("*"):
 
-            if image_path.suffix.lower() in [
-                ".png",
-                ".jpg",
-                ".jpeg"
-            ]:
+            if image_path.suffix.lower() in [".png", ".jpg", ".jpeg"]:
 
                 wandb.log(
-                    {
-                        f"media-test/{image_path.stem}":
-                            wandb.Image(
-                                str(image_path)
-                            )
-                    }
+                    {f"media-test/{image_path.stem}": wandb.Image(str(image_path))}
                 )
 
-        self.logger.info(
-            "Logged test metrics and media."
-        )
+        self.logger.info("Logged test metrics and media.")

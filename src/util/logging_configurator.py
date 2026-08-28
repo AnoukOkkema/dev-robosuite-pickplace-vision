@@ -49,7 +49,9 @@ class LoggingConfigurator:
                     config = yaml.safe_load(file)
 
                     if "file" in config.get("handlers", {}):
-                        config["handlers"]["file"]["filename"] = str(Path("logs", log_filename))
+                        config["handlers"]["file"]["filename"] = str(
+                            Path("logs", log_filename)
+                        )
 
                     logging.config.dictConfig(config)
             else:
@@ -93,8 +95,7 @@ class LoggingConfigurator:
             return
 
         macros_private_path = os.path.join(
-            spec.submodule_search_locations[0],
-            "macros_private.py"
+            spec.submodule_search_locations[0], "macros_private.py"
         )
 
         if os.path.exists(macros_private_path):

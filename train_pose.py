@@ -125,9 +125,7 @@ def main() -> None:
         pose_visualizer=pose_visualizer,
     )
 
-    trainer.train(
-        enabled=config.train_pose_estimator
-    )
+    trainer.train(enabled=config.train_pose_estimator)
 
     # ===== EVALUATION =====
     evaluator = PoseEvaluator(
@@ -156,9 +154,7 @@ def main() -> None:
     if wandb.run is not None:
         wandb.finish()
 
-    logger.info(
-        "Pipeline completed successfully."
-    )
+    logger.info("Pipeline completed successfully.")
 
 
 if __name__ == "__main__":

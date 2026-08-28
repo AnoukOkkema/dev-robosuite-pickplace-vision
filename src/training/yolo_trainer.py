@@ -21,7 +21,7 @@ class YOLOTrainer:
         device: str,
         project_name: str,
         run_name: str,
-        logger
+        logger,
     ) -> None:
         """
         Sets up the YOLOTrainer and loads the base model.
@@ -78,7 +78,7 @@ class YOLOTrainer:
             self.image_size,
             self.batch_size,
             self.patience,
-            self.device
+            self.device,
         )
 
     def train(self, enabled: bool = True) -> Optional[Path]:
@@ -97,9 +97,7 @@ class YOLOTrainer:
             self.logger.info("Training skipped.")
             return None
 
-        self.logger.info(
-            "Starting YOLO training..."
-        )
+        self.logger.info("Starting YOLO training...")
 
         results = self.model.train(
             data=str(self.data_yaml_path),
@@ -111,14 +109,11 @@ class YOLOTrainer:
             project=str(self.project_name),
             name=f"{self.run_name}-train",
             exist_ok=True,
-            plots=True        
+            plots=True,
         )
 
         save_dir = Path(results.save_dir)
 
-        self.logger.info(
-            "Training completed successfully | save_dir=%s",
-            save_dir
-        )
+        self.logger.info("Training completed successfully | save_dir=%s", save_dir)
 
         return save_dir

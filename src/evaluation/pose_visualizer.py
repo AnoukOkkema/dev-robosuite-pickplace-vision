@@ -29,8 +29,8 @@ class PoseVisualizer:
 
     AXIS_LENGTH = 0.05
     AXIS_COLORS = [(0, 0, 255), (0, 255, 0), (255, 0, 0)]  # BGR: x=red, y=green, z=blue
-    GT_COLOR = (255, 255, 255)   # white
-    PRED_COLOR = (0, 165, 255)   # orange
+    GT_COLOR = (255, 255, 255)  # white
+    PRED_COLOR = (0, 165, 255)  # orange
 
     def __init__(
         self,
@@ -119,7 +119,8 @@ class PoseVisualizer:
         return cam_xpos, cam_xmat, fovy
 
     def _project(self, xyz_cam: np.ndarray) -> Optional[Tuple[float, float]]:
-        """Pinhole-projects a camera-frame point to a pixel in the (crop_region-cropped) image."""
+        """Pinhole-projects a camera-frame point to a pixel in the
+        crop_region-cropped image."""
 
         x, y, z = xyz_cam
         if -z <= 1e-6:
@@ -133,7 +134,13 @@ class PoseVisualizer:
 
         return u, v
 
-    def _draw_pose(self, image: np.ndarray, xyz_cam: np.ndarray, rot_cam: np.ndarray, color: Tuple[int, int, int]) -> None:
+    def _draw_pose(
+        self,
+        image: np.ndarray,
+        xyz_cam: np.ndarray,
+        rot_cam: np.ndarray,
+        color: Tuple[int, int, int],
+    ) -> None:
         """
         Draws a pose as a colored dot at its origin plus three short
         RGB-colored axis lines (x=red, y=green, z=blue) for orientation.
@@ -164,7 +171,14 @@ class PoseVisualizer:
                 continue
 
             ax, ay = axis_pixel
-            cv2.line(image, (int(ox), int(oy)), (int(ax), int(ay)), axis_color, 2, cv2.LINE_AA)
+            cv2.line(
+                image,
+                (int(ox), int(oy)),
+                (int(ax), int(ay)),
+                axis_color,
+                2,
+                cv2.LINE_AA,
+            )
 
     @staticmethod
     def _dedupe_highest_confidence(detections: List[Detection]) -> List[Detection]:
@@ -187,7 +201,8 @@ class PoseVisualizer:
         return list(best_by_class.values())
 
     def _preprocess_image(self, image_bgr: np.ndarray, image_size: int) -> torch.Tensor:
-        """Resizes + normalizes a BGR image into a (1, 3, image_size, image_size) model input tensor."""
+        """Resizes and normalizes a BGR image into a (1, 3, image_size,
+        image_size) model input tensor."""
 
         resized = cv2.resize(image_bgr, (image_size, image_size))
         rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
@@ -238,7 +253,9 @@ class PoseVisualizer:
         if model is None:
             return labels_image, None
 
-        detections, _, _ = self.detector.predict(image, conf_threshold=0.25, iou_threshold=0.45)
+        detections, _, _ = self.detector.predict(
+            image, conf_threshold=0.25, iou_threshold=0.45
+        )
         detections = self._dedupe_highest_confidence(detections)
 
         pred_image = image.copy()
@@ -252,28 +269,43 @@ class PoseVisualizer:
             for detection in detections:
                 x1, y1, x2, y2 = detection.box
 
-                class_onehot = torch.zeros(1, model.num_classes, dtype=torch.float32, device=self.device)
+                class_onehot = torch.zeros(
+                    1, model.num_classes, dtype=torch.float32, device=self.device
+                )
                 class_onehot[0, detection.class_id] = 1.0
 
                 x1i, y1i = max(int(round(x1)), 0), max(int(round(y1)), 0)
-                x2i, y2i = min(int(round(x2)), frame_width), min(int(round(y2)), frame_height)
+                x2i, y2i = min(int(round(x2)), frame_width), min(
+                    int(round(y2)), frame_height
+                )
                 cv2.rectangle(pred_image, (x1i, y1i), (x2i, y2i), (0, 255, 0), 1)
 
                 object_crop = image[y1i:y2i, x1i:x2i]
                 if object_crop.size == 0:
                     continue
 
-                x1n, y1n, x2n, y2n = x1 / frame_width, y1 / frame_height, x2 / frame_width, y2 / frame_height
+                x1n, y1n, x2n, y2n = (
+                    x1 / frame_width,
+                    y1 / frame_height,
+                    x2 / frame_width,
+                    y2 / frame_height,
+                )
                 area = (x2n - x1n) * (y2n - y1n)
                 cx, cy = (x1n + x2n) / 2, (y1n + y2n) / 2
 
                 bbox_norm = torch.tensor(
-                    [[x1n, y1n, x2n, y2n, area, cx, cy]], dtype=torch.float32, device=self.device
+                    [[x1n, y1n, x2n, y2n, area, cx, cy]],
+                    dtype=torch.float32,
+                    device=self.device,
                 )
 
-                crop_blob = self._preprocess_image(object_crop, self.rotation_image_size).to(self.device)
+                crop_blob = self._preprocess_image(
+                    object_crop, self.rotation_image_size
+                ).to(self.device)
 
-                xyz_pred, rot6d_pred = model(image_blob, bbox_norm, class_onehot, crop_blob)
+                xyz_pred, rot6d_pred = model(
+                    image_blob, bbox_norm, class_onehot, crop_blob
+                )
                 xyz_pred = xyz_pred[0].cpu().numpy()
                 rot_pred = PoseEstimator.rot6d_to_matrix(rot6d_pred)[0].cpu().numpy()
 

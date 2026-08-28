@@ -173,7 +173,9 @@ class PoseTrainer:
         if not symmetric_indices:
             return torch.ones_like(class_indices, dtype=torch.bool)
 
-        symmetric_indices_tensor = torch.tensor(symmetric_indices, device=class_indices.device)
+        symmetric_indices_tensor = torch.tensor(
+            symmetric_indices, device=class_indices.device
+        )
         return ~torch.isin(class_indices, symmetric_indices_tensor)
 
     def _per_class_metrics(
@@ -184,9 +186,12 @@ class PoseTrainer:
         rot_target: torch.Tensor,
         class_indices: torch.Tensor,
     ) -> dict:
-        """Per-class mean absolute xyz error (in cm) and mean rotation error (in degrees)."""
+        """Per-class mean absolute xyz error, in cm, and mean rotation error,
+        in degrees."""
 
-        per_sample_error_deg = torch.rad2deg(self._symmetry_min_angle_rad(rot_pred, rot_target))
+        per_sample_error_deg = torch.rad2deg(
+            self._symmetry_min_angle_rad(rot_pred, rot_target)
+        )
         per_class = {}
 
         for class_index, class_name in enumerate(self.class_names):
@@ -196,14 +201,21 @@ class PoseTrainer:
                 continue
 
             per_class[class_name] = {
-                "xyz_mae_cm": (torch.abs(xyz_target[mask] - xyz_pred[mask]).mean() * 100.0).item(),
+                "xyz_mae_cm": (
+                    torch.abs(xyz_target[mask] - xyz_pred[mask]).mean() * 100.0
+                ).item(),
                 "rot_mean_angle_error_deg": per_sample_error_deg[mask].mean().item(),
             }
 
         return per_class
 
-    def _per_sample_angle_rad(self, rot_pred: torch.Tensor, rot_target: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
-        """Per-sample geodesic angle (in radians), as arccos((trace(R_pred^T @ R_target) - 1) / 2)."""
+    def _per_sample_angle_rad(
+        self, rot_pred: torch.Tensor, rot_target: torch.Tensor, eps: float = 1e-6
+    ) -> torch.Tensor:
+        """Per-sample geodesic angle, in radians.
+
+        Computed as arccos((trace(R_pred^T @ R_target) - 1) / 2).
+        """
 
         relative_rotation = torch.matmul(rot_pred.transpose(1, 2), rot_target)
         trace = relative_rotation.diagonal(dim1=1, dim2=2).sum(-1)
@@ -211,8 +223,11 @@ class PoseTrainer:
 
         return torch.acos(cos_angle)
 
-    def _symmetry_min_angle_rad(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> torch.Tensor:
-        """Per-sample geodesic angle to the closest symmetry-equivalent target rotation."""
+    def _symmetry_min_angle_rad(
+        self, rot_pred: torch.Tensor, rot_target: torch.Tensor
+    ) -> torch.Tensor:
+        """Per-sample geodesic angle to the closest symmetry-equivalent
+        target rotation."""
 
         candidate_angles = torch.stack(
             [
@@ -225,7 +240,10 @@ class PoseTrainer:
         return candidate_angles.min(dim=0).values
 
     def _rotation_loss(
-        self, rot6d_pred: torch.Tensor, rot_cam_target: torch.Tensor, class_indices: torch.Tensor
+        self,
+        rot6d_pred: torch.Tensor,
+        rot_cam_target: torch.Tensor,
+        class_indices: torch.Tensor,
     ) -> torch.Tensor:
         """Symmetry-aware geodesic rotation loss (in radians), averaged per class.
 
@@ -254,10 +272,16 @@ class PoseTrainer:
 
         return torch.stack(per_class_losses).mean()
 
-    def _mean_angular_error_deg(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> float:
+    def _mean_angular_error_deg(
+        self, rot_pred: torch.Tensor, rot_target: torch.Tensor
+    ) -> float:
         """Mean symmetry-aware geodesic rotation error over the batch (in degrees)."""
 
-        return torch.rad2deg(self._symmetry_min_angle_rad(rot_pred, rot_target)).mean().item()
+        return (
+            torch.rad2deg(self._symmetry_min_angle_rad(rot_pred, rot_target))
+            .mean()
+            .item()
+        )
 
     def _run_epoch(self, loader: DataLoader, is_training: bool) -> dict:
         """
@@ -306,7 +330,9 @@ class PoseTrainer:
                 xyz_pred, rot6d_pred = self.model(image, bbox, class_onehot, crop)
 
                 xyz_loss = self._macro_mse_by_class(xyz_pred, xyz, class_indices)
-                rot_loss = self._rotation_loss(rot6d_pred, rot_cam_target, class_indices)
+                rot_loss = self._rotation_loss(
+                    rot6d_pred, rot_cam_target, class_indices
+                )
                 loss = xyz_loss + self.rotation_loss_weight * rot_loss
 
                 if is_training:
@@ -331,12 +357,18 @@ class PoseTrainer:
         class_indices_all = torch.cat(all_class_indices, dim=0)
 
         per_class = self._per_class_metrics(
-            xyz_pred_all, xyz_target_all, rot_pred_all, rot_target_all, class_indices_all
+            xyz_pred_all,
+            xyz_target_all,
+            rot_pred_all,
+            rot_target_all,
+            class_indices_all,
         )
         # xyz still matters for every class. Rotation only matters for
         # classes where it's meaningful (see rotation_symmetric_classes).
         rot_scored_classes = {
-            name: c for name, c in per_class.items() if name not in self.rotation_symmetric_classes
+            name: c
+            for name, c in per_class.items()
+            if name not in self.rotation_symmetric_classes
         }
         rotation_scored_mask = self._rotation_scored_mask(class_indices_all)
 
@@ -347,7 +379,8 @@ class PoseTrainer:
             "rot_mean_angle_error_deg": self._mean_angular_error_deg(
                 rot_pred_all[rotation_scored_mask], rot_target_all[rotation_scored_mask]
             ),
-            "xyz_mae_cm_macro": sum(c["xyz_mae_cm"] for c in per_class.values()) / len(per_class),
+            "xyz_mae_cm_macro": sum(c["xyz_mae_cm"] for c in per_class.values())
+            / len(per_class),
             "rot_mean_angle_error_deg_macro": (
                 sum(c["rot_mean_angle_error_deg"] for c in rot_scored_classes.values())
                 / len(rot_scored_classes)
@@ -391,12 +424,16 @@ class PoseTrainer:
             train_metrics.pop("per_class")
             val_per_class = val_metrics.pop("per_class")
 
-            val_loss = val_metrics["xyz_loss"] + self.rotation_loss_weight * val_metrics["rot_loss"]
+            val_loss = (
+                val_metrics["xyz_loss"]
+                + self.rotation_loss_weight * val_metrics["rot_loss"]
+            )
             self.scheduler.step(val_loss)
 
             self.logger.info(
-                "epoch=%d/%d | train_xyz_mae_cm_macro=%.2f train_rot_err_deg_macro=%.2f | "
-                "val_xyz_mae_cm_macro=%.2f val_rot_err_deg_macro=%.2f | lr=%.2e",
+                "epoch=%d/%d | train_xyz_mae_cm_macro=%.2f "
+                "train_rot_err_deg_macro=%.2f | val_xyz_mae_cm_macro=%.2f "
+                "val_rot_err_deg_macro=%.2f | lr=%.2e",
                 epoch + 1,
                 self.epochs,
                 train_metrics["xyz_mae_cm_macro"],
@@ -417,7 +454,8 @@ class PoseTrainer:
                     else f"{class_metrics['rot_mean_angle_error_deg']:.2f}"
                 )
                 self.logger.debug(
-                    "  val per class | %-8s | xyz_mae_cm=%.2f | rot_mean_angle_error_deg=%s",
+                    "  val per class | %-8s | xyz_mae_cm=%.2f | "
+                    "rot_mean_angle_error_deg=%s",
                     class_name,
                     class_metrics["xyz_mae_cm"],
                     rotation_display,
@@ -427,10 +465,16 @@ class PoseTrainer:
                 self.wandb_callback.log_epoch(epoch + 1, train_metrics, val_metrics)
 
                 if self.pose_visualizer is not None:
-                    train_labels_images, _ = self.pose_visualizer.capture_media(model=None)
-                    self.wandb_callback.log_scene_media("train", train_labels_images, step=epoch + 1)
+                    train_labels_images, _ = self.pose_visualizer.capture_media(
+                        model=None
+                    )
+                    self.wandb_callback.log_scene_media(
+                        "train", train_labels_images, step=epoch + 1
+                    )
 
-                    val_labels_images, val_pred_images = self.pose_visualizer.capture_media(model=self.model)
+                    val_labels_images, val_pred_images = (
+                        self.pose_visualizer.capture_media(model=self.model)
+                    )
                     self.wandb_callback.log_scene_media(
                         "val", val_labels_images, val_pred_images, step=epoch + 1
                     )
@@ -450,9 +494,13 @@ class PoseTrainer:
             else:
                 epochs_without_improvement += 1
 
-            if self.early_stopping_patience and epochs_without_improvement >= self.early_stopping_patience:
+            if (
+                self.early_stopping_patience
+                and epochs_without_improvement >= self.early_stopping_patience
+            ):
                 self.logger.info(
-                    "Early stopping at epoch=%d/%d | no val_loss improvement for %d epochs (best_val_loss=%.6f)",
+                    "Early stopping at epoch=%d/%d | no val_loss improvement "
+                    "for %d epochs (best_val_loss=%.6f)",
                     epoch + 1,
                     self.epochs,
                     epochs_without_improvement,

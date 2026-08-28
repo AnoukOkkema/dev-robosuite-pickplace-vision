@@ -6,7 +6,10 @@ import numpy as np
 
 @dataclass
 class RoboflowConfig:
-    """Roboflow project to download the labeled dataset from (config.yaml `ROBOFLOW`)."""
+    """Roboflow project to download the labeled dataset from.
+
+    See config.yaml's `ROBOFLOW` section.
+    """
 
     workspace_name: str
     project_name: str
@@ -20,7 +23,9 @@ class RoboflowConfig:
 
 @dataclass
 class EnvironmentConfig:
-    """Simulation settings that must match the real robot setup (config.yaml `ENVIRONMENT`).
+    """Simulation settings that must match the real robot setup.
+
+    See config.yaml's `ENVIRONMENT` section.
 
     robot_base_offset must match the value used in the other repo that
     actually controls the robot. Here is why: PoseEstimator's xyz stream
@@ -136,7 +141,8 @@ class DeviceConfig:
     """Compute device resolved by DeviceConfigurator, for torch and ONNX Runtime."""
 
     torch_device: str
-    # Execution providers in priority order (see DeviceConfigurator._resolve_onnx_providers).
+    # Execution providers in priority order.
+    # See DeviceConfigurator._resolve_onnx_providers.
     onnx_providers: list[str] = field(default_factory=list)
 
 

@@ -22,7 +22,7 @@ class YOLOEvaluator:
         run_name: str,
         export_onnx_name: str,
         export_onnx_threshold: float,
-        logger
+        logger,
     ) -> None:
         """
         Initializes the evaluator.
@@ -57,21 +57,11 @@ class YOLOEvaluator:
 
         self.logger = logger
 
-        self.model_path = (
-            self.train_dir /
-            "weights" /
-            "best.pt"
-        )
+        self.model_path = self.train_dir / "weights" / "best.pt"
 
-        self.logger.info(
-            "YOLOEvaluator initialized | checkpoint=%s",
-            self.model_path
-        )
+        self.logger.info("YOLOEvaluator initialized | checkpoint=%s", self.model_path)
 
-    def evaluate(
-        self,
-        enabled: bool = True
-    ) -> Optional[Dict[str, Any]]:
+    def evaluate(self, enabled: bool = True) -> Optional[Dict[str, Any]]:
         """
         Evaluates the YOLO model.
 
@@ -89,21 +79,15 @@ class YOLOEvaluator:
 
         if not self.model_path.exists():
 
-            raise FileNotFoundError(
-                f"Model checkpoint not found: {self.model_path}"
-            )
+            raise FileNotFoundError(f"Model checkpoint not found: {self.model_path}")
 
-        model = YOLO(
-            str(self.model_path)
-        )
+        model = YOLO(str(self.model_path))
 
         # Remove default Ultralytics callbacks
         for event in model.callbacks:
             model.callbacks[event] = []
 
-        self.logger.info(
-            "Starting YOLO evaluation..."
-        )
+        self.logger.info("Starting YOLO evaluation...")
 
         metrics = model.val(
             data=str(self.data_yaml_path),
@@ -139,10 +123,9 @@ class YOLOEvaluator:
         if score >= self.export_onnx_threshold:
 
             self.logger.info(
-                "Exporting YOLO model to ONNX | "
-                "mAP50-95=%.4f >= threshold=%.4f",
+                "Exporting YOLO model to ONNX | " "mAP50-95=%.4f >= threshold=%.4f",
                 score,
-                self.export_onnx_threshold
+                self.export_onnx_threshold,
             )
 
             exported_path = Path(
@@ -151,28 +134,24 @@ class YOLOEvaluator:
                     device=self.device,
                     imgsz=self.image_size,
                     simplify=True,
-                    dynamic=True
+                    dynamic=True,
                 )
             )
 
             onnx_path = str(exported_path.with_name(self.export_onnx_name))
             os.replace(exported_path, onnx_path)
 
-            self.logger.info(
-                "ONNX export completed | path=%s",
-                onnx_path
-            )
+            self.logger.info("ONNX export completed | path=%s", onnx_path)
 
         else:
             self.logger.info(
-                "ONNX export skipped | "
-                "mAP50-95=%.4f < threshold=%.4f",
+                "ONNX export skipped | " "mAP50-95=%.4f < threshold=%.4f",
                 score,
-                self.export_onnx_threshold
+                self.export_onnx_threshold,
             )
 
         return {
             "results": results,
             "save_dir": str(metrics.save_dir),
-            "onnx_path": onnx_path
+            "onnx_path": onnx_path,
         }

@@ -103,7 +103,9 @@ class PoseEvaluator:
             )
 
         model = PoseEstimator(num_classes=self.num_classes, pretrained=False)
-        model.load_state_dict(torch.load(self.checkpoint_path, map_location=self.device))
+        model.load_state_dict(
+            torch.load(self.checkpoint_path, map_location=self.device)
+        )
         model.to(self.device)
         model.eval()
 
@@ -125,8 +127,11 @@ class PoseEvaluator:
 
         return (torch.abs(targets - preds).mean() * 100.0).item()
 
-    def _angle_rad(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> torch.Tensor:
-        """Per-sample geodesic angle (radians) between two batches of rotation matrices."""
+    def _angle_rad(
+        self, rot_pred: torch.Tensor, rot_target: torch.Tensor
+    ) -> torch.Tensor:
+        """Per-sample geodesic angle, in radians, between two batches of
+        rotation matrices."""
 
         relative_rotation = torch.matmul(rot_pred.transpose(1, 2), rot_target)
         trace = relative_rotation.diagonal(dim1=1, dim2=2).sum(-1)
@@ -134,7 +139,9 @@ class PoseEvaluator:
 
         return torch.acos(cos_angle)
 
-    def _rotation_scored_mask(self, class_indices: torch.Tensor, class_names: list) -> torch.Tensor:
+    def _rotation_scored_mask(
+        self, class_indices: torch.Tensor, class_names: list
+    ) -> torch.Tensor:
         """Boolean mask selecting samples whose class is not rotation-symmetric.
 
         Keeps rotation_symmetric_classes (e.g. Can) out of the pooled
@@ -151,10 +158,14 @@ class PoseEvaluator:
         if not symmetric_indices:
             return torch.ones_like(class_indices, dtype=torch.bool)
 
-        symmetric_indices_tensor = torch.tensor(symmetric_indices, device=class_indices.device)
+        symmetric_indices_tensor = torch.tensor(
+            symmetric_indices, device=class_indices.device
+        )
         return ~torch.isin(class_indices, symmetric_indices_tensor)
 
-    def _per_sample_angle_deg(self, rot_pred: torch.Tensor, rot_target: torch.Tensor) -> torch.Tensor:
+    def _per_sample_angle_deg(
+        self, rot_pred: torch.Tensor, rot_target: torch.Tensor
+    ) -> torch.Tensor:
         """
         Per-sample geodesic rotation error, in degrees, to the closest
         symmetry-equivalent target rotation (see symmetry_local_rotations).
@@ -172,7 +183,9 @@ class PoseEvaluator:
 
         return torch.rad2deg(candidate_angles.min(dim=0).values)
 
-    def _run_test_set(self, model: PoseEstimator, test_loader: DataLoader) -> Dict[str, Any]:
+    def _run_test_set(
+        self, model: PoseEstimator, test_loader: DataLoader
+    ) -> Dict[str, Any]:
         """
         Runs inference over the full test set and computes overall and
         per-class metrics (xyz R^2, mean rotation angle error).
@@ -223,14 +236,18 @@ class PoseEvaluator:
 
         per_sample_error_deg = self._per_sample_angle_deg(rot_pred_all, rot_target_all)
         class_names = test_loader.dataset.dataset.class_names
-        rotation_scored_mask = self._rotation_scored_mask(class_indices_all, class_names)
+        rotation_scored_mask = self._rotation_scored_mask(
+            class_indices_all, class_names
+        )
 
         metrics = {
             "xyz_r2": self._r2_score(xyz_pred_all, xyz_target_all),
             # Excludes rotation_symmetric_classes (e.g. Can). Otherwise
             # their meaningless rotation "error" would still distort this
             # pooled reference number.
-            "rot_mean_angle_error_deg": per_sample_error_deg[rotation_scored_mask].mean().item(),
+            "rot_mean_angle_error_deg": per_sample_error_deg[rotation_scored_mask]
+            .mean()
+            .item(),
         }
 
         per_class = {}
@@ -254,13 +271,16 @@ class PoseEvaluator:
         # every class. Rotation only applies to classes where it's
         # meaningful (see rotation_symmetric_classes).
         rot_scored_classes = {
-            name: c for name, c in per_class.items() if name not in self.rotation_symmetric_classes
+            name: c
+            for name, c in per_class.items()
+            if name not in self.rotation_symmetric_classes
         }
         metrics["xyz_mae_cm_macro"] = sum(
             class_metrics["xyz_mae_cm"] for class_metrics in per_class.values()
         ) / len(per_class)
         metrics["rot_mean_angle_error_deg_macro"] = sum(
-            class_metrics["rot_mean_angle_error_deg"] for class_metrics in rot_scored_classes.values()
+            class_metrics["rot_mean_angle_error_deg"]
+            for class_metrics in rot_scored_classes.values()
         ) / len(rot_scored_classes)
 
         metrics["per_class"] = per_class
@@ -282,11 +302,15 @@ class PoseEvaluator:
 
         os.makedirs(onnx_path.parent, exist_ok=True)
 
-        dummy_image = torch.randn(1, 3, self.image_size, self.image_size, device=self.device)
+        dummy_image = torch.randn(
+            1, 3, self.image_size, self.image_size, device=self.device
+        )
         dummy_bbox = torch.rand(1, PoseEstimator.BBOX_FEATURES, device=self.device)
         dummy_class_onehot = torch.zeros(1, model.num_classes, device=self.device)
         dummy_class_onehot[0, 0] = 1.0
-        dummy_crop = torch.randn(1, 3, self.rotation_image_size, self.rotation_image_size, device=self.device)
+        dummy_crop = torch.randn(
+            1, 3, self.rotation_image_size, self.rotation_image_size, device=self.device
+        )
 
         torch.onnx.export(
             model,
@@ -305,10 +329,7 @@ class PoseEvaluator:
             opset_version=17,
         )
 
-        self.logger.info(
-            "ONNX export completed | path=%s",
-            onnx_path
-        )
+        self.logger.info("ONNX export completed | path=%s", onnx_path)
 
     def evaluate(
         self,
@@ -390,25 +411,31 @@ class PoseEvaluator:
             }
 
             for class_name, class_metrics in metrics["per_class"].items():
-                wandb_metrics.update({
-                    f"per_class/{class_name}/{key}": value
-                    for key, value in class_metrics.items()
-                    # Rotation is meaningless noise for rotation-symmetric
-                    # classes (see rotation_symmetric_classes). It's kept
-                    # out of W&B too, matching the text log's "n/a"
-                    # treatment, so it can't show up as a false outlier on
-                    # a chart.
-                    if not (
-                        key == "rot_mean_angle_error_deg"
-                        and class_name in self.rotation_symmetric_classes
-                    )
-                })
+                wandb_metrics.update(
+                    {
+                        f"per_class/{class_name}/{key}": value
+                        for key, value in class_metrics.items()
+                        # Rotation is meaningless noise for rotation-symmetric
+                        # classes (see rotation_symmetric_classes). It's kept
+                        # out of W&B too, matching the text log's "n/a"
+                        # treatment, so it can't show up as a false outlier on
+                        # a chart.
+                        if not (
+                            key == "rot_mean_angle_error_deg"
+                            and class_name in self.rotation_symmetric_classes
+                        )
+                    }
+                )
 
             self.wandb_callback.log_test_results(wandb_metrics)
 
             if self.pose_visualizer is not None:
-                test_labels_images, test_pred_images = self.pose_visualizer.capture_media(model=model)
-                self.wandb_callback.log_scene_media("test", test_labels_images, test_pred_images)
+                test_labels_images, test_pred_images = (
+                    self.pose_visualizer.capture_media(model=model)
+                )
+                self.wandb_callback.log_scene_media(
+                    "test", test_labels_images, test_pred_images
+                )
 
         failing_classes = [
             class_name
@@ -416,7 +443,8 @@ class PoseEvaluator:
             if class_metrics["xyz_mae_cm"] > export_position_threshold_cm
             or (
                 class_name not in self.rotation_symmetric_classes
-                and class_metrics["rot_mean_angle_error_deg"] > export_rotation_threshold_deg
+                and class_metrics["rot_mean_angle_error_deg"]
+                > export_rotation_threshold_deg
             )
         ]
         export_ok = not failing_classes
@@ -437,17 +465,21 @@ class PoseEvaluator:
             self._export_onnx(model, onnx_path)
 
         else:
+            failing_summaries = []
+            for class_name in failing_classes:
+                class_metrics = metrics["per_class"][class_name]
+                failing_summaries.append(
+                    f"{class_name} (xyz_mae_cm={class_metrics['xyz_mae_cm']:.2f}, "
+                    "rot_mean_angle_error_deg="
+                    f"{class_metrics['rot_mean_angle_error_deg']:.2f})"
+                )
+
             self.logger.info(
                 "ONNX export skipped | needs xyz_mae_cm <= %.2f and "
                 "rot_mean_angle_error_deg <= %.2f | failing classes: %s",
                 export_position_threshold_cm,
                 export_rotation_threshold_deg,
-                ", ".join(
-                    f"{class_name} (xyz_mae_cm={metrics['per_class'][class_name]['xyz_mae_cm']:.2f}, "
-                    f"rot_mean_angle_error_deg="
-                    f"{metrics['per_class'][class_name]['rot_mean_angle_error_deg']:.2f})"
-                    for class_name in failing_classes
-                ),
+                ", ".join(failing_summaries),
             )
 
         return {

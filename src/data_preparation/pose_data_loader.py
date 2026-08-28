@@ -46,7 +46,9 @@ class PoseDataLoader:
         """
 
         self.dataset = PoseDataset(
-            pose_dataset_path, image_size=image_size, rotation_image_size=rotation_image_size
+            pose_dataset_path,
+            image_size=image_size,
+            rotation_image_size=rotation_image_size,
         )
         self.batch_size = batch_size
         self.val_split = val_split
@@ -55,9 +57,15 @@ class PoseDataLoader:
 
         train_dataset, val_dataset, test_dataset = self._split()
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=False)
-        self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+        self.train_loader = DataLoader(
+            train_dataset, batch_size=self.batch_size, shuffle=True
+        )
+        self.val_loader = DataLoader(
+            val_dataset, batch_size=self.batch_size, shuffle=False
+        )
+        self.test_loader = DataLoader(
+            test_dataset, batch_size=self.batch_size, shuffle=False
+        )
 
         self.logger.info(
             "PoseDataLoader initialized | total=%d | train=%d | val=%d | test=%d",
@@ -101,12 +109,24 @@ class PoseDataLoader:
         test_frame_count = int(len(frame_indices) * self.test_split)
 
         val_frames = set(frame_indices[:val_frame_count])
-        test_frames = set(frame_indices[val_frame_count : val_frame_count + test_frame_count])
+        test_frames = set(
+            frame_indices[val_frame_count : val_frame_count + test_frame_count]
+        )
         train_frames = set(frame_indices[val_frame_count + test_frame_count :])
 
         frame_index_column = self.dataset.df["frame_index"]
-        train_indices = frame_index_column[frame_index_column.isin(train_frames)].index.tolist()
-        val_indices = frame_index_column[frame_index_column.isin(val_frames)].index.tolist()
-        test_indices = frame_index_column[frame_index_column.isin(test_frames)].index.tolist()
+        train_indices = frame_index_column[
+            frame_index_column.isin(train_frames)
+        ].index.tolist()
+        val_indices = frame_index_column[
+            frame_index_column.isin(val_frames)
+        ].index.tolist()
+        test_indices = frame_index_column[
+            frame_index_column.isin(test_frames)
+        ].index.tolist()
 
-        return Subset(self.dataset, train_indices), Subset(self.dataset, val_indices), Subset(self.dataset, test_indices)
+        return (
+            Subset(self.dataset, train_indices),
+            Subset(self.dataset, val_indices),
+            Subset(self.dataset, test_indices),
+        )

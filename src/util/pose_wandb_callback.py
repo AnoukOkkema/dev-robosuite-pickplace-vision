@@ -88,7 +88,9 @@ class PoseWandBCallback:
         """
 
         num_parameters = sum(p.numel() for p in model.parameters())
-        num_trainable_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        num_trainable_parameters = sum(
+            p.numel() for p in model.parameters() if p.requires_grad
+        )
 
         wandb.log(
             {
@@ -154,11 +156,15 @@ class PoseWandBCallback:
         """
 
         log_data = {
-            f"media-{prefix}/labels": [wandb.Image(image[:, :, ::-1]) for image in labels_images],
+            f"media-{prefix}/labels": [
+                wandb.Image(image[:, :, ::-1]) for image in labels_images
+            ],
         }
 
         if pred_images:
-            log_data[f"media-{prefix}/pred"] = [wandb.Image(image[:, :, ::-1]) for image in pred_images]
+            log_data[f"media-{prefix}/pred"] = [
+                wandb.Image(image[:, :, ::-1]) for image in pred_images
+            ]
 
         log_kwargs = {"step": step} if step is not None else {}
         wandb.log(log_data, **log_kwargs)

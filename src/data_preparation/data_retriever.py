@@ -1,9 +1,11 @@
 # Import required libraries
-from roboflow import Roboflow
-from typing import Optional
-import yaml
 import os
 from pathlib import Path
+from typing import Optional
+
+import yaml
+from roboflow import Roboflow
+
 
 class RoboflowDownloader:
     """
@@ -25,7 +27,7 @@ class RoboflowDownloader:
         version_number: str,
         data_path: str,
         model: str,
-        logger
+        logger,
     ) -> None:
         """
         Initializes a RoboflowDownloader instance.
@@ -53,7 +55,9 @@ class RoboflowDownloader:
         self.logger = logger
 
     @staticmethod
-    def resolve_local_folder_path(data_path: str, dataset_folder_name: str, version_number) -> str:
+    def resolve_local_folder_path(
+        data_path: str, dataset_folder_name: str, version_number
+    ) -> str:
         """
         Builds the local dataset folder path from DATASET_FOLDER_NAME and
         VERSION_NUMBER. This matches the folder name Roboflow itself uses
@@ -132,7 +136,8 @@ class RoboflowDownloader:
 
             if download.location is None:
                 self.logger.error(
-                    "Failed to download dataset. Check your project and version details."
+                    "Failed to download dataset. Check your project and "
+                    "version details."
                 )
                 return None
 

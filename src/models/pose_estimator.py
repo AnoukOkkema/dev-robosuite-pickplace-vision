@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import ResNet18_Weights, resnet18
 
 
 class PoseEstimator(nn.Module):
@@ -36,7 +36,12 @@ class PoseEstimator(nn.Module):
     CLASS_HIDDEN_FEATURES = 32
     HIDDEN_FEATURES = 256
 
-    def __init__(self, num_classes: int, pretrained: bool = True, rotation_dropout_prob: float = 0.3) -> None:
+    def __init__(
+        self,
+        num_classes: int,
+        pretrained: bool = True,
+        rotation_dropout_prob: float = 0.3,
+    ) -> None:
         super().__init__()
 
         self.num_classes = num_classes
@@ -46,7 +51,9 @@ class PoseEstimator(nn.Module):
         xyz_backbone_out_features = self.xyz_backbone.fc.in_features
         self.xyz_backbone.fc = nn.Identity()
 
-        xyz_head_in_features = xyz_backbone_out_features + self.BBOX_FEATURES + num_classes
+        xyz_head_in_features = (
+            xyz_backbone_out_features + self.BBOX_FEATURES + num_classes
+        )
         self.xyz_hidden = nn.Sequential(
             nn.Linear(xyz_head_in_features, self.HIDDEN_FEATURES),
             nn.ReLU(inplace=True),
@@ -79,7 +86,13 @@ class PoseEstimator(nn.Module):
         weights = ResNet18_Weights.DEFAULT if pretrained else None
         return resnet18(weights=weights)
 
-    def forward(self, image: torch.Tensor, bbox: torch.Tensor, class_onehot: torch.Tensor, crop: torch.Tensor):
+    def forward(
+        self,
+        image: torch.Tensor,
+        bbox: torch.Tensor,
+        class_onehot: torch.Tensor,
+        crop: torch.Tensor,
+    ):
         """
         Args:
             image (torch.Tensor): (B, 3, H, W) normalized RGB full agentview frames.
@@ -89,7 +102,8 @@ class PoseEstimator(nn.Module):
             crop (torch.Tensor): (B, 3, H, W) normalized RGB tight object crops.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]: (xyz, rot6d), with shapes (B, 3) and (B, 6).
+            Tuple[torch.Tensor, torch.Tensor]: (xyz, rot6d), with shapes
+            (B, 3) and (B, 6).
         """
 
         xyz_features = self.xyz_backbone(image)

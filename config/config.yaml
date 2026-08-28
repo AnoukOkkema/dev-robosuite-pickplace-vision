@@ -2,15 +2,22 @@
 DATA_FOLDER: "./data/"
 
 # Object detection pipeline (train_yolo.py). Turn each step on/off below.
-GENERATE_DATASET: false      # Step 1: create synthetic frames from robosuite.
-DOWNLOAD_DATASET: true       # Step 2: download the labeled dataset from Roboflow.
-TRAIN_YOLO: true             # Step 3: train the YOLO model.
-EVAL_YOLO: true              # Step 4: test the model, export to ONNX if it passes.
+# Step 1: create synthetic frames from robosuite.
+GENERATE_DATASET: false
+# Step 2: download the labeled dataset from Roboflow.
+DOWNLOAD_DATASET: true
+# Step 3: train the YOLO model.
+TRAIN_YOLO: true
+# Step 4: test the model, export to ONNX if it passes.
+EVAL_YOLO: true
 
 # Pose estimation pipeline (train_pose.py). Turn each step on/off below.
-GENERATE_POSE_DATASET: false # Step 1: build the pose dataset from robosuite + YOLO.
-TRAIN_POSE_ESTIMATOR: true   # Step 2: train the PoseEstimator model.
-EVAL_POSE_ESTIMATOR: true    # Step 3: test the model, export to ONNX if it passes.
+# Step 1: build the pose dataset from robosuite + YOLO.
+GENERATE_POSE_DATASET: false
+# Step 2: train the PoseEstimator model.
+TRAIN_POSE_ESTIMATOR: true
+# Step 3: test the model, export to ONNX if it passes.
+EVAL_POSE_ESTIMATOR: true
 
 ENVIRONMENT:
   # XYZ offset applied to the Panda robot's base position in the simulation.
@@ -21,21 +28,35 @@ ENVIRONMENT:
 # DOWNLOAD_DATASET above). The dataset is public, so any valid Roboflow API
 # key can download it, even from a different account.
 ROBOFLOW:
+  # Roboflow workspace name.
   WORKSPACE_NAME: "anouk-okkema"
+  # Roboflow project name.
   PROJECT_NAME: "robosuite-pickplace-object-detection-synthetic"
-  DATASET_FOLDER_NAME: "PickPlace Vision Dataset"  # local folder name the dataset is saved under
+  # Local folder name the dataset is saved under.
+  DATASET_FOLDER_NAME: "PickPlace Vision Dataset"
+  # Dataset version to download.
   VERSION_NUMBER: 1
+  # Annotation format the dataset is downloaded in.
   MODEL_FORMAT: "yolov8"
 
 YOLO:
-  MODEL_NAME: "yolov8n.pt"       # base model training starts from
+  # Base model training starts from.
+  MODEL_NAME: "yolov8n.pt"
+  # Training epoch count.
   EPOCHS: 100
+  # Training image resolution, in pixels.
   IMAGE_SIZE: 640
+  # Training batch size.
   BATCH_SIZE: 16
-  PATIENCE: 30                   # epochs to wait with no improvement before stopping early
-  PROJECT_NAME: "robosuite-pickplace-vision"   # Ultralytics run folder name
+  # Epochs to wait with no improvement before stopping early.
+  PATIENCE: 30
+  # Ultralytics run folder name.
+  PROJECT_NAME: "robosuite-pickplace-vision"
+  # Name of this specific run, within PROJECT_NAME.
   RUN_NAME: "yolov8n-baseline-v1"
-  EXPORT_ONNX_THRESHOLD: 0.8     # minimum mAP50-95 score (test set) needed to export to ONNX
+  # Minimum mAP50-95 score, on the test set, needed to export to ONNX.
+  EXPORT_ONNX_THRESHOLD: 0.8
+  # Filename the exported ONNX model is saved as.
   EXPORT_ONNX_NAME: "yolo_detector.onnx"
 
 # Turns off Ultralytics' own experiment trackers. We log to W&B ourselves
@@ -48,22 +69,39 @@ ULTRALYTICS:
   clearml: false
 
 POSE:
+  # Ultralytics-style run folder name for the pose pipeline.
   PROJECT_NAME: "robosuite-pickplace-pose"
+  # Name of this specific run, within PROJECT_NAME.
   RUN_NAME: "pose-estimator-baseline-v1"
-  POSE_DATASET_PATH: "./data/pose_dataset.pkl"             # shared between train and eval
+  # Path to the generated pose dataset. Shared between train and eval.
+  POSE_DATASET_PATH: "./data/pose_dataset.pkl"
+  # Path the best training checkpoint is saved to and loaded from.
   CHECKPOINT_PATH: "./runs/pose_estimator/best.pt"
+  # Output path for the exported ONNX model.
   ONNX_EXPORT_PATH: "./runs/pose_estimator/pose_estimator.onnx"
-  NUM_DATASET_IMAGES: 4000        # number of frames the pose dataset generator creates
-  POS_IMAGE_SIZE: 320             # input size for the position stream (full scene)
-  ROTATION_IMAGE_SIZE: 128        # input size for the rotation stream (object crop)
+  # Number of frames the pose dataset generator creates.
+  NUM_DATASET_IMAGES: 4000
+  # Input size for the position stream (full scene).
+  POS_IMAGE_SIZE: 320
+  # Input size for the rotation stream (object crop).
+  ROTATION_IMAGE_SIZE: 128
+  # Dropout rate used in the class processor and rotation head.
   DROPOUT: 0.3
+  # Training batch size.
   BATCH_SIZE: 16
+  # Maximum training epoch count.
   EPOCHS: 200
+  # Optimizer learning rate.
   LEARNING_RATE: 0.0001
-  EARLY_STOPPING_PATIENCE: 20     # 0 or null disables early stopping (always runs all EPOCHS)
+  # Epochs to wait for val_loss to improve before stopping early.
+  # 0 or null disables early stopping (always runs all EPOCHS).
+  EARLY_STOPPING_PATIENCE: 20
+  # Fraction of the dataset held out for validation.
   VAL_SPLIT: 0.15
+  # Fraction of the dataset held out for testing.
   TEST_SPLIT: 0.15
-  ROTATION_LOSS_WEIGHT: 1.0       # how much the rotation loss counts, relative to the position loss
+  # How much the rotation loss counts, relative to the position loss.
+  ROTATION_LOSS_WEIGHT: 1.0
 
   # The model is only exported to ONNX if every class's mean position error
   # (cm) AND rotation error (below) both meet their threshold. An average

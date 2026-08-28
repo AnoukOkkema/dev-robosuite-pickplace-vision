@@ -1,13 +1,13 @@
+import logging
 import os
 from typing import Optional
-import logging
 
 import cv2
 import numpy as np
-from tqdm import tqdm
 import robosuite as suite
 from robosuite.controllers import load_composite_controller_config
 from robosuite.environments.base import MujocoEnv
+from tqdm import tqdm
 
 from src.util.types import CropRegion, ImageSize
 
@@ -79,11 +79,7 @@ class DatasetGenerator:
                 Initialized robosuite environment.
         """
 
-        controller_config = (
-            load_composite_controller_config(
-                controller="BASIC"
-            )
-        )
+        controller_config = load_composite_controller_config(controller="BASIC")
 
         env = suite.make(
             "PickPlace",
@@ -117,9 +113,7 @@ class DatasetGenerator:
 
         action = self._sample_action()
 
-        self.env.step(
-            action
-        )
+        self.env.step(action)
 
     def _sample_action(self) -> np.ndarray:
         """
@@ -132,15 +126,9 @@ class DatasetGenerator:
 
         low, high = self.env.action_spec
 
-        return np.random.uniform(
-            low,
-            high
-        )
+        return np.random.uniform(low, high)
 
-    def _process_image(
-        self,
-        obs: dict
-    ) -> np.ndarray:
+    def _process_image(self, obs: dict) -> np.ndarray:
         """
         Processes the observation image.
 
@@ -159,19 +147,14 @@ class DatasetGenerator:
                 Processed image.
         """
 
-        image = np.flipud(
-            obs["agentview_image"]
-        )
+        image = np.flipud(obs["agentview_image"])
 
         image = image[
-            self.crop_region.y1:self.crop_region.y2,
-            self.crop_region.x1:self.crop_region.x2
+            self.crop_region.y1 : self.crop_region.y2,
+            self.crop_region.x1 : self.crop_region.x2,
         ]
 
-        image = cv2.cvtColor(
-            image,
-            cv2.COLOR_RGB2BGR
-        )
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
         return image
 
@@ -189,10 +172,7 @@ class DatasetGenerator:
             [
                 file
                 for file in os.listdir(self.save_dir)
-                if (
-                    file.startswith("frame_")
-                    and file.endswith(".png")
-                )
+                if (file.startswith("frame_") and file.endswith(".png"))
             ]
         )
 
@@ -202,18 +182,11 @@ class DatasetGenerator:
 
         last_image = existing_images[-1]
 
-        last_index = int(
-            last_image
-            .replace("frame_", "")
-            .replace(".png", "")
-        )
+        last_index = int(last_image.replace("frame_", "").replace(".png", ""))
 
         return last_index + 1
 
-    def generate(
-        self,
-        enabled: bool = True
-    ) -> None:
+    def generate(self, enabled: bool = True) -> None:
         """
         Generates the synthetic dataset.
 
@@ -227,16 +200,11 @@ class DatasetGenerator:
 
         if not enabled:
 
-            self.logger.info(
-                "Dataset generation skipped."
-            )
+            self.logger.info("Dataset generation skipped.")
 
             return
 
-        os.makedirs(
-            self.save_dir,
-            exist_ok=True
-        )
+        os.makedirs(self.save_dir, exist_ok=True)
 
         self.env = self._init_env()
 
@@ -245,63 +213,35 @@ class DatasetGenerator:
         start_index = self._get_start_index()
 
         self.logger.info(
-            (
-                "Starting dataset generation | "
-                "num_images=%d | "
-                "start_index=%d"
-            ),
+            ("Starting dataset generation | " "num_images=%d | " "start_index=%d"),
             self.num_images,
-            start_index
-        )
-
-        pbar = tqdm(
-            total=self.num_images
-        )
-
-        for step in range(
             start_index,
-            start_index + self.num_images
-        ):
+        )
+
+        pbar = tqdm(total=self.num_images)
+
+        for step in range(start_index, start_index + self.num_images):
 
             obs = self.env.reset()
 
             action = self._sample_action()
 
-            obs, _, _, _ = self.env.step(
-                action
-            )
+            obs, _, _, _ = self.env.step(action)
 
-            image = self._process_image(
-                obs
-            )
+            image = self._process_image(obs)
 
-            filepath = os.path.join(
-                self.save_dir,
-                f"frame_{step:05d}.png"
-            )
+            filepath = os.path.join(self.save_dir, f"frame_{step:05d}.png")
 
-            cv2.imwrite(
-                filepath,
-                image
-            )
+            cv2.imwrite(filepath, image)
 
             pbar.update(1)
 
-            pbar.set_description(
-                (
-                    f"Processed: "
-                    f"{pbar.n}/{pbar.total}"
-                )
-            )
+            pbar.set_description((f"Processed: " f"{pbar.n}/{pbar.total}"))
 
         pbar.close()
 
         self.logger.info(
-            (
-                "Dataset generation completed | "
-                "generated=%d images"
-            ),
-            self.num_images
+            ("Dataset generation completed | " "generated=%d images"), self.num_images
         )
 
         self.env.close()

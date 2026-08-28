@@ -19,13 +19,13 @@ There are two separate pipelines, each with its own entrypoint:
 - [Highlights](#highlights)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Project structure](#project-structure)
 - [Quick start](#quick-start)
 - [Configuration](#configuration-configconfigyaml)
 - [Object detection pipeline](#object-detection-pipeline-train_yolopy)
 - [Pose estimation pipeline](#pose-estimation-pipeline-train_posepy)
-- [Project structure](#project-structure)
-- [Devices](#devices-deviceconfigurator)
-- [Logging](#logging-setup_logger)
+- [Code quality](#code-quality)
+- [Citation](#citation)
 
 ## Highlights
 
@@ -72,6 +72,44 @@ Then create a `.env` file with your Roboflow API key:
 
 ```
 API_KEY=your-roboflow-api-key
+```
+
+## Project structure
+
+```
+dev-robosuite-pickplace-vision/
+├── config/
+│   ├── config.yaml          # Pipeline configuration (see below)
+│   └── logging.yaml         # Logging configuration (Python logging.dictConfig)
+├── src/
+│   ├── data_preparation/
+│   │   ├── robosuite_env.py           # Builds the shared robosuite PickPlace environment
+│   │   ├── dataset_generator.py       # Generates raw (unlabeled) frames via robosuite
+│   │   ├── data_retriever.py          # Downloads the labeled dataset from Roboflow
+│   │   ├── pose_dataset_generator.py  # Generates labeled pose samples (xyz + rotation)
+│   │   ├── pose_dataset.py            # torch Dataset over pose_dataset.pkl
+│   │   └── pose_data_loader.py        # Builds train/val/test DataLoaders
+│   ├── models/
+│   │   └── pose_estimator.py      # PoseEstimator (xyz + 6D rotation, two-stream ResNet18)
+│   ├── training/
+│   │   ├── yolo_trainer.py        # YOLO training (Ultralytics)
+│   │   └── pose_trainer.py        # PoseEstimator training (joint xyz + rotation loss)
+│   ├── evaluation/
+│   │   ├── yolo_evaluator.py      # YOLO evaluation + optional ONNX export
+│   │   ├── onnx_detector.py       # Inference wrapper around yolo_detector.onnx
+│   │   ├── pose_evaluator.py      # PoseEstimator evaluation + optional ONNX export
+│   │   └── pose_visualizer.py     # Renders live scenes with predicted/ground-truth poses
+│   └── util/
+│       ├── types.py                  # Typed dataclasses for config/devices
+│       ├── system_configurator.py    # Reads config.yaml into SystemConfig
+│       ├── device_configurator.py    # Detects cuda/mps/cpu + onnx providers
+│       ├── logging_configurator.py   # Sets up logging from logging.yaml
+│       ├── yolo_wandb_callback.py    # W&B logging during YOLO training/evaluation
+│       └── pose_wandb_callback.py    # W&B logging during pose training/evaluation
+├── train_yolo.py              # Entrypoint of the object detection pipeline
+├── train_pose.py              # Entrypoint of the pose estimation pipeline
+├── pyproject.toml             # Dependencies + uv extras (cpu/mps/gpu)
+└── uv.lock
 ```
 
 ## Quick start
@@ -323,67 +361,30 @@ Renders live agentview scenes showing the true pose (white) next to the
 predicted pose (orange), logged to W&B during training/evaluation. It uses
 its own robosuite environment, separate from the training dataset.
 
-## Project structure
+## Code quality
 
-```
-dev-robosuite-pickplace-vision/
-├── config/
-│   ├── config.yaml          # Pipeline configuration (see above)
-│   └── logging.yaml         # Logging configuration (Python logging.dictConfig)
-├── src/
-│   ├── data_preparation/
-│   │   ├── robosuite_env.py           # Builds the shared robosuite PickPlace environment
-│   │   ├── dataset_generator.py       # Generates raw (unlabeled) frames via robosuite
-│   │   ├── data_retriever.py          # Downloads the labeled dataset from Roboflow
-│   │   ├── pose_dataset_generator.py  # Generates labeled pose samples (xyz + rotation)
-│   │   ├── pose_dataset.py            # torch Dataset over pose_dataset.pkl
-│   │   └── pose_data_loader.py        # Builds train/val/test DataLoaders
-│   ├── models/
-│   │   └── pose_estimator.py      # PoseEstimator (xyz + 6D rotation, two-stream ResNet18)
-│   ├── training/
-│   │   ├── yolo_trainer.py        # YOLO training (Ultralytics)
-│   │   └── pose_trainer.py        # PoseEstimator training (joint xyz + rotation loss)
-│   ├── evaluation/
-│   │   ├── yolo_evaluator.py      # YOLO evaluation + optional ONNX export
-│   │   ├── onnx_detector.py       # Inference wrapper around yolo_detector.onnx
-│   │   ├── pose_evaluator.py      # PoseEstimator evaluation + optional ONNX export
-│   │   └── pose_visualizer.py     # Renders live scenes with predicted/ground-truth poses
-│   └── util/
-│       ├── types.py                  # Typed dataclasses for config/devices
-│       ├── system_configurator.py    # Reads config.yaml into SystemConfig
-│       ├── device_configurator.py    # Detects cuda/mps/cpu + onnx providers
-│       ├── logging_configurator.py   # Sets up logging from logging.yaml
-│       ├── yolo_wandb_callback.py    # W&B logging during YOLO training/evaluation
-│       └── pose_wandb_callback.py    # W&B logging during pose training/evaluation
-├── train_yolo.py              # Entrypoint of the object detection pipeline
-├── train_pose.py              # Entrypoint of the pose estimation pipeline
-├── pyproject.toml             # Dependencies + uv extras (cpu/mps/gpu)
-└── uv.lock
+Install the Git hook once after cloning:
+
+```bash
+uv run pre-commit install
 ```
 
-## Devices (`DeviceConfigurator`)
+Run every hook manually when needed:
 
-[`src/util/device_configurator.py`](src/util/device_configurator.py)
+```bash
+uv run pre-commit run --all-files
+```
 
-Automatically finds the best available device (`cuda` → `mps` → otherwise
-`cpu`) for torch, and picks the matching `onnxruntime` execution providers
-(`CUDAExecutionProvider`/`CoreMLExecutionProvider`, with
-`CPUExecutionProvider` always kept as a fallback). This is logged every
-time the pipeline runs.
+## Citation
 
-## Logging (`LoggingConfigurator`)
+This project uses [robosuite](https://robosuite.ai/). If you use robosuite in
+work based on this project, cite:
 
-[`src/util/logging_configurator.py`](src/util/logging_configurator.py)
-
-Sets up Python logging from `config/logging.yaml`
-(`logging.config.dictConfig`), via `LoggingConfigurator.setup(log_filename)`.
-Console output goes to stderr, and a detailed log file is written to
-`logs/<log_filename>` (overwritten each run). Each entrypoint passes its
-own filename, e.g. `train_yolo.py` uses `train_yolo.log` and
-`train_pose.py` uses `train_pose.log`, so the two pipelines don't overwrite
-each other's logs. If the YAML file is missing or invalid, it falls back
-to a basic configuration.
-
-`LoggingConfigurator.suppress_robosuite_warnings()` is called separately,
-before robosuite is imported anywhere, to silence robosuite's own startup
-warnings.
+```bibtex
+@inproceedings{robosuite2020,
+  title={robosuite: A Modular Simulation Framework and Benchmark for Robot Learning},
+  author={Yuke Zhu and Josiah Wong and Ajay Mandlekar and Roberto Mart\'{i}n-Mart\'{i}n and Abhishek Joshi and Soroush Nasiriany and Yifeng Zhu and Kevin Lin},
+  booktitle={arXiv preprint arXiv:2009.12293},
+  year={2020}
+}
+```

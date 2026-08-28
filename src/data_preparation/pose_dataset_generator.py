@@ -135,7 +135,9 @@ class PoseDatasetGenerator:
         return cam_xpos, cam_xmat
 
     @staticmethod
-    def capture_agentview_image(obs: dict, crop_region: Optional[CropRegion] = None) -> np.ndarray:
+    def capture_agentview_image(
+        obs: dict, crop_region: Optional[CropRegion] = None
+    ) -> np.ndarray:
         """
         Processes obs["agentview_image"] the same way DatasetGenerator does:
         flip it vertically, crop it, then convert it from RGB to BGR.
@@ -152,8 +154,7 @@ class PoseDatasetGenerator:
 
         if crop_region is not None:
             image = image[
-                crop_region.y1:crop_region.y2,
-                crop_region.x1:crop_region.x2
+                crop_region.y1 : crop_region.y2, crop_region.x1 : crop_region.x2
             ]
 
         return cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -184,7 +185,9 @@ class PoseDatasetGenerator:
         return xyz_cam, rot_cam
 
     @staticmethod
-    def match_label_for_class_name(class_name: str, labels: dict) -> Optional[PoseLabel]:
+    def match_label_for_class_name(
+        class_name: str, labels: dict
+    ) -> Optional[PoseLabel]:
         """
         Finds the pose-label that belongs to a YOLO class name.
 
@@ -245,16 +248,18 @@ class PoseDatasetGenerator:
         and "robot0_eef_pos/_quat".
         """
 
-        return sorted({
-            key.rsplit("_", 1)[0]
-            for key in obs.keys()
-            if (
-                key.endswith("_pos")
-                and f"{key.rsplit('_', 1)[0]}_quat" in obs
-                and "_to_" not in key
-                and not key.startswith("robot")
-            )
-        })
+        return sorted(
+            {
+                key.rsplit("_", 1)[0]
+                for key in obs.keys()
+                if (
+                    key.endswith("_pos")
+                    and f"{key.rsplit('_', 1)[0]}_quat" in obs
+                    and "_to_" not in key
+                    and not key.startswith("robot")
+                )
+            }
+        )
 
     def _world_labels_camera_frame(self, obs, object_names) -> dict:
         """
@@ -292,7 +297,8 @@ class PoseDatasetGenerator:
 
         Args:
             detections (List[Detection]): This frame's YOLO detections.
-            world_labels (dict): {object_name: PoseLabel}, from `_world_labels_camera_frame`.
+            world_labels (dict): {object_name: PoseLabel}, from
+                `_world_labels_camera_frame`.
 
         Returns:
             Optional[List[tuple]]: List of (detection, class_name, label)
@@ -370,7 +376,9 @@ class PoseDatasetGenerator:
                 iou_threshold=self.config.iou_threshold,
             )
 
-            for obs, image, detections in zip(batch_obs, batch_images, batch_detections):
+            for obs, image, detections in zip(
+                batch_obs, batch_images, batch_detections
+            ):
                 object_names = self.get_object_names(obs)
                 world_labels = self._world_labels_camera_frame(obs, object_names)
 
